@@ -1,4 +1,4 @@
-def detect_weight():
+def detect_phone():
     pass
 
 def get_weight():
