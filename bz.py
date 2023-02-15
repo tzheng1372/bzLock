@@ -1,14 +1,13 @@
-def info():  
-    '''Prints a basic library description'''
-    print("Software library for the bzLock project.")
-
+import time
 import RPi.GPIO as GPIO
 import spidev
 from hx711 import HX711
+import digitalio
+import board
+import adafruit_matrixkeypad
 
 ADC_Start = 0b00000001
 ADC_CH0 = 0b10000000
-
 
 def callback_fn(FSR_pin):
     print("phone detected")
@@ -32,8 +31,23 @@ def get_weight():
 
 hx = HX711(dout_pin = 5, pd_sck_pin = 6)
 
-def get_weight():
+def get_numpad_input():
+    cols = [digitalio.DigitalInOut(x) for x in (board.D26, board.D20, board.D21)]
+    rows = [digitalio.DigitalInOut(x) for x in (board.D5, board.D6, board.D13, board.D19)]
+    keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
+    keypad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
+
+    while True:
+        keys = keypad.pressed_keys
+        if keys:
+            print("Pressed: ", keys)
+            return keys
+
+def update_display():
     pass
 
-def detect_phone():
+def clear_display():
+    pass
+
+def position_servo(angle):
     pass
