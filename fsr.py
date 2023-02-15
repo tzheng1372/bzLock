@@ -1,5 +1,27 @@
+import RPi.GPIO as GPIO
+import spidev
+
+ADC_Start = 0b00000001
+ADC_CH0 = 0b10000000
+
+
 def detect_phone():
-    pass
+    GPIO.setmode(GPIO.BCM)
+    FSR_pin = 23
+
+    GPIO.setup(FSR_pin, GPIO.IN)
+
+    def callback_fn(FSR_pin):
+        print("phone detected")
+
+    GPIO.add_event_detect(FSR_pin, GPIO.RISING, callback = callback_fn)
 
 def get_weight():
-    pass
+    spi = spidev.SpiDev()
+    spi.open(0,0)
+    spi.mode = 0b00
+    spi.max_speed_hz = 1200000
+    readBytes = spi.xfer2([ADC_Start, ADC_CH0, 0x00])
+    digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
+    print(format(readBytes[2], '#010b'), format(readBytes[1], '#010b'), format(readBytes[0], '#010b'))
+    print(digitalValue)
