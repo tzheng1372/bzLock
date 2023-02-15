@@ -6,14 +6,6 @@ import digitalio
 import board
 import adafruit_matrixkeypad
 
-ADC_Start = 0b00000001
-ADC_CH0 = 0b10000000
-FSR_pin = 23
-spi = spidev.SpiDev()
-spi.open(0,0)
-spi.mode = 0b00
-spi.max_speed_hz = 1200000
-
 def callback_fn(FSR_pin):
     return True
 
@@ -32,7 +24,20 @@ def fsr_adc_detect_phone():
     else:
         return False
 
-hx = HX711(dout_pin = 5, pd_sck_pin = 6)
+def load_cell_get_weight():
+    hx.power_up()
+    hx.zero()
+    if hx._ready():
+        weight = hx.get_weight_mean()
+    return weight
+    
+def load_cell_detect_phone():
+    if hx._ready():
+        weight = hx.get_weight_mean()
+    if weight > 0:
+        return True
+    else:
+        return False
 
 def get_numpad_input():
     cols = [digitalio.DigitalInOut(x) for x in (board.D26, board.D20, board.D21)]
@@ -51,21 +56,6 @@ def update_display():
 
 def clear_display():
     pass
-def load_cell_get_weight():
-    hx.power_up()
-    hx.zero()
-    if hx._ready():
-        weight = hx.get_weight_mean()
-    return weight
-
 
 def position_servo(angle):
     pass
-
-def load_cell_detect_phone():
-    if hx._ready():
-        weight = hx.get_weight_mean()
-    if weight > 0:
-        return True
-    else:
-        return False
