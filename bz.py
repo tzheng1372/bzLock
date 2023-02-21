@@ -1,10 +1,29 @@
-import time
-import RPi.GPIO as GPIO
-import spidev
-from hx711 import HX711
-import digitalio
 import board
+import busio
+import digitalio
+import spidev
+import smbus
+import time
+
+from hx711 import HX711
+from PIL import Image, ImageDraw, ImageFont
+
+import RPi.GPIO as GPIO
 import adafruit_matrixkeypad
+import adafruit_ssd1306
+
+# OLED specs
+OLED_WIDTH = 128
+OLED_HEIGHT = 64
+OLED_ADDRESS = 0x3c
+OLED_REGADDR = 0x00
+OLED_DISPOFF = 0xAE
+OLED_DISPON  = 0xAF
+
+# Initialize I2C library busio
+bus = smbus.SMBus(1)
+i2c = busio.I2C(board.SCL, board.SDA)
+oled = adafruit_ssd1306.SSD1306_I2C(OLED_WIDTH, OLED_HEIGHT, i2c, addr=OLED_ADDRESS)
 
 def callback_fn(FSR_pin):
     return True
@@ -51,11 +70,33 @@ def get_numpad_input():
             print("Pressed: ", keys)
             return keys
 
-def update_display():
-    pass
+def oled_text(text):
+    # Graphics stuff - create a canvas to draw/write on
+    image = Image.new("1", (oled.width, oled.height))
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
 
-def clear_display():
-    pass
+    # Draw a rectangle with no fill, ten pixels thick
+    draw.rectangle((0, 0, oled.width-1, oled.height-1), outline=10, fill=0)
+
+    # Draw some text
+    (font_width, font_height) = font.getsize(text)
+    draw.text( # position text in center
+        (oled.width // 2 - font_width // 2, oled.height // 2 - font_height // 2),  
+        text,
+        font=font,
+        fill=255,
+    )
+
+    # Display image
+    oled.image(image)
+    oled.show()
+
+def oled_off():
+    bus.write_byte_data(OLED_ADDRESS, OLED_REGADDR, OLED_DISPOFF)
+
+def oled_on():
+    bus.write_byte_data(OLED_ADDRESS, OLED_REGADDR, OLED_DISPON)
 
 def position_servo(angle):
     pass
