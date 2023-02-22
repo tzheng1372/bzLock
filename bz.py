@@ -1,39 +1,19 @@
 import board
-import busio
 import digitalio
-import displayio
-import terminalio
-import time
 import pigpio
 import RPi.GPIO as GPIO
 import spidev
-import smbus
 
 from hx711 import HX711
-from adafruit_display_text import label
-import adafruit_displayio_sh1106
 import adafruit_matrixkeypad
 
-# Initialize SPI for OLED
-displayio.release_displays()
+from luma.core.interface.serial import i2c
+from luma.core.render import canvas
+from luma.oled.device import sh1106
 
-spi = busio.SPI(board.SCK, board.MOSI)
-display_bus = displayio.FourWire(
-    spi,
-    command=board.OLED_DC,
-    chip_select=board.OLED_CS,
-    reset=board.OLED_RESET,
-    baudrate=1000000,
-)
-
-WIDTH = 128
-HEIGHT = 64
-BORDER = 5
-display = adafruit_displayio_sh1106.SH1106(display_bus, width=WIDTH, height=HEIGHT)
-
-# Initialize servo motor
-pwm_pin = 12
-pi = pigpio.pi()
+# Initialize OLED
+serial = i2c(port=1, address=0x3C)
+device = sh1106(serial)
 
 # Initialize FSR
 ADC_Start = 0b00000001
@@ -46,6 +26,10 @@ spi.max_speed_hz = 1200000
 
 # Initialize LC
 hx = HX711(dout_pin = 5, pd_sck_pin = 6)
+
+# Initialize servo motor
+pwm_pin = 12
+pi = pigpio.pi()
 
 def callback_fn(FSR_pin):
     return True
@@ -94,31 +78,9 @@ def numpad_get_input():
             return keys[0]
 
 def oled_update(text):
-    # Make the display context
-    splash = displayio.Group()
-    display.show(splash)
-
-    color_bitmap = displayio.Bitmap(WIDTH, HEIGHT, 1)
-    color_palette = displayio.Palette(1)
-    color_palette[0] = 0xFFFFFF  # White
-
-    bg_sprite = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
-    splash.append(bg_sprite)
-
-    # Draw a smaller inner rectangle
-    inner_bitmap = displayio.Bitmap(WIDTH - BORDER * 2, HEIGHT - BORDER * 2, 1)
-    inner_palette = displayio.Palette(1)
-    inner_palette[0] = 0x000000  # Black
-    inner_sprite = displayio.TileGrid(
-        inner_bitmap, pixel_shader=inner_palette, x=BORDER, y=BORDER
-    )
-    splash.append(inner_sprite)
-
-    # Draw a label
-    text_area = label.Label(
-        terminalio.FONT, text=text, color=0xFFFFFF, x=28, y=HEIGHT // 2 - 1
-    )
-    splash.append(text_area)
+    with canvas(device) as draw:
+        draw.rectangle(device.bounding_box, outline="white", fill="black")
+        draw.text((30, 40), text, fill="white")
 
 def servo_position(angle):
     inc = int(angle * 100000 / 180)
