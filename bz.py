@@ -1,30 +1,35 @@
 import board
 import busio
 import digitalio
+import displayio
+import terminalio
+import time
 import pigpio
 import RPi.GPIO as GPIO
 import spidev
 import smbus
-import time
 
 from hx711 import HX711
-from PIL import Image, ImageDraw, ImageFont
-
+from adafruit_display_text import label
+import adafruit_displayio_sh1106
 import adafruit_matrixkeypad
-import adafruit_ssd1306
 
-# OLED specs
-OLED_WIDTH = 128
-OLED_HEIGHT = 64
-OLED_ADDRESS = 0x3C
-OLED_REGADDR = 0x00
-OLED_DISPOFF = 0xAE
-OLED_DISPON  = 0xAF
+# Initialize SPI for OLED
+displayio.release_displays()
 
-# Initialize smbus and I2C library busio
-bus = smbus.SMBus(1)
-i2c = busio.I2C(board.SCL, board.SDA)
-oled = adafruit_ssd1306.SSD1306_I2C(OLED_WIDTH, OLED_HEIGHT, i2c, addr=OLED_ADDRESS)
+spi = busio.SPI(board.SCK, board.MOSI)
+display_bus = displayio.FourWire(
+    spi,
+    command=board.OLED_DC,
+    chip_select=board.OLED_CS,
+    reset=board.OLED_RESET,
+    baudrate=1000000,
+)
+
+WIDTH = 128
+HEIGHT = 64
+BORDER = 5
+display = adafruit_displayio_sh1106.SH1106(display_bus, width=WIDTH, height=HEIGHT)
 
 # Initialize servo motor
 pwm_pin = 12
@@ -89,32 +94,31 @@ def numpad_get_input():
             return keys[0]
 
 def oled_update(text):
-    # Graphics stuff - create a canvas to draw/write on
-    image = Image.new("1", (oled.width, oled.height))
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.load_default()
+    # Make the display context
+    splash = displayio.Group()
+    display.show(splash)
 
-    # Draw a rectangle with no fill, ten pixels thick
-    draw.rectangle((0, 0, oled.width-1, oled.height-1), outline=10, fill=0)
+    color_bitmap = displayio.Bitmap(WIDTH, HEIGHT, 1)
+    color_palette = displayio.Palette(1)
+    color_palette[0] = 0xFFFFFF  # White
 
-    # Draw some text
-    (font_width, font_height) = font.getsize(text)
-    draw.text( # position text in center
-        (oled.width // 2 - font_width // 2, oled.height // 2 - font_height // 2),  
-        text,
-        font=font,
-        fill=255,
+    bg_sprite = displayio.TileGrid(color_bitmap, pixel_shader=color_palette, x=0, y=0)
+    splash.append(bg_sprite)
+
+    # Draw a smaller inner rectangle
+    inner_bitmap = displayio.Bitmap(WIDTH - BORDER * 2, HEIGHT - BORDER * 2, 1)
+    inner_palette = displayio.Palette(1)
+    inner_palette[0] = 0x000000  # Black
+    inner_sprite = displayio.TileGrid(
+        inner_bitmap, pixel_shader=inner_palette, x=BORDER, y=BORDER
     )
+    splash.append(inner_sprite)
 
-    # Display image
-    oled.image(image)
-    oled.show()
-
-def oled_off():
-    bus.write_byte_data(OLED_ADDRESS, OLED_REGADDR, OLED_DISPOFF)
-
-def oled_on():
-    bus.write_byte_data(OLED_ADDRESS, OLED_REGADDR, OLED_DISPON)
+    # Draw a label
+    text_area = label.Label(
+        terminalio.FONT, text=text, color=0xFFFFFF, x=28, y=HEIGHT // 2 - 1
+    )
+    splash.append(text_area)
 
 def servo_position(angle):
     inc = int(angle * 100000 / 180)
