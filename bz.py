@@ -68,7 +68,7 @@ def numpad_get_input():
         keys = keypad.pressed_keys
         if keys:
             print("Pressed: ", keys)
-            return keys
+            return keys[0]
 
 def oled_update(text):
     # Graphics stuff - create a canvas to draw/write on
