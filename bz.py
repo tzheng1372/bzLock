@@ -30,7 +30,7 @@ oled = adafruit_ssd1306.SSD1306_I2C(OLED_WIDTH, OLED_HEIGHT, i2c, addr=OLED_ADDR
 pwm_pin = 12
 pi = pigpio.pi()
 
-# Initialize 
+# Initialize FSR
 ADC_Start = 0b00000001
 ADC_CH0 = 0b10000000
 FSR_pin = 23
@@ -38,6 +38,8 @@ spi = spidev.SpiDev()
 spi.open(0,0)
 spi.mode = 0b00
 spi.max_speed_hz = 1200000
+
+# Initialize LC
 hx = HX711(dout_pin = 5, pd_sck_pin = 6)
 
 def callback_fn(FSR_pin):
