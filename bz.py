@@ -59,6 +59,7 @@ def fsr_adc_detect_phone():
 
 def load_cell_setup():
     hx.power_up()
+    hx.reset()
     hx.zero()
 
 def load_cell_get_weight():
