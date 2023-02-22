@@ -24,20 +24,23 @@ def fsr_adc_detect_phone():
     else:
         return False
 
-def load_cell_get_weight():
+def load_cell_setup():
     hx.power_up()
     hx.zero()
-    if hx._ready():
-        weight = hx.get_weight_mean()
+
+def load_cell_get_weight():
+    weight = hx.get_weight_mean()
     return weight
     
 def load_cell_detect_phone():
-    if hx._ready():
-        weight = hx.get_weight_mean()
+    weight = hx.get_weight_mean()
     if weight > 0:
         return True
     else:
         return False
+
+def load_cell_shut_down():
+    hx.power_down()
 
 def get_numpad_input():
     cols = [digitalio.DigitalInOut(x) for x in (board.D26, board.D20, board.D21)]
@@ -58,4 +61,6 @@ def clear_display():
     pass
 
 def position_servo(angle):
-    pass
+    #on = (angle/180) + 1
+    #duty = on/20
+    pi.hardware_PWM(12, 59, (angle/180)*1000000)

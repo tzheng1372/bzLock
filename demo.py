@@ -16,3 +16,8 @@ spi.mode = 0b00
 spi.max_speed_hz = 1200000
 
 hx = HX711(dout_pin = 5, pd_sck_pin = 6)
+load_cell_setup()
+fsr_detect_phone()
+fsr_adc_detect_phone()
+load_cell_get_weight()
+load_cell_shut_down()
