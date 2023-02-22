@@ -25,7 +25,7 @@ spi.mode = 0b00
 spi.max_speed_hz = 1200000
 
 # Initialize LC
-hx = HX711(dout_pin = 5, pd_sck_pin = 6)
+hx = HX711(dout_pin = 17, pd_sck_pin = 27)
 
 # Initialize servo motor
 pwm_pin = 12
