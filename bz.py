@@ -57,8 +57,7 @@ def fsr_adc_detect_phone():
     print(digitalValue)
     if digitalValue > 0:
         return True
-    else:
-        return False
+    return False
 
 def load_cell_setup():
     hx.power_up()

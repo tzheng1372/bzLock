@@ -25,6 +25,6 @@ while(1):
     print("screen is on")
     bz.oled_on()
     time.sleep(1)
-    print("type something to show on display:") 
+    print("type something to show on display:")
     bz.oled_update(input())
     time.sleep(0.3)
