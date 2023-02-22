@@ -1,6 +1,8 @@
 import board
 import busio
 import digitalio
+import pigpio
+import RPi.GPIO as GPIO
 import spidev
 import smbus
 import time
@@ -8,7 +10,6 @@ import time
 from hx711 import HX711
 from PIL import Image, ImageDraw, ImageFont
 
-import RPi.GPIO as GPIO
 import adafruit_matrixkeypad
 import adafruit_ssd1306
 
@@ -24,6 +25,20 @@ OLED_DISPON  = 0xAF
 bus = smbus.SMBus(1)
 i2c = busio.I2C(board.SCL, board.SDA)
 oled = adafruit_ssd1306.SSD1306_I2C(OLED_WIDTH, OLED_HEIGHT, i2c, addr=OLED_ADDRESS)
+
+# Initialize servo motor
+pwm_pin = 12
+pi = pigpio.pi()
+
+# Initialize 
+ADC_Start = 0b00000001
+ADC_CH0 = 0b10000000
+FSR_pin = 23
+spi = spidev.SpiDev()
+spi.open(0,0)
+spi.mode = 0b00
+spi.max_speed_hz = 1200000
+hx = HX711(dout_pin = 5, pd_sck_pin = 6)
 
 def callback_fn(FSR_pin):
     return True
@@ -43,20 +58,22 @@ def fsr_adc_detect_phone():
     else:
         return False
 
-def load_cell_get_weight():
+def load_cell_setup():
     hx.power_up()
     hx.zero()
-    if hx._ready():
-        weight = hx.get_weight_mean()
+
+def load_cell_get_weight():
+    weight = hx.get_weight_mean()
     return weight
     
 def load_cell_detect_phone():
-    if hx._ready():
-        weight = hx.get_weight_mean()
+    weight = hx.get_weight_mean()
     if weight > 0:
         return True
-    else:
-        return False
+    return False
+
+def load_cell_shut_down():
+    hx.power_down()
 
 def numpad_get_input():
     cols = [digitalio.DigitalInOut(x) for x in (board.D26, board.D20, board.D21)]
@@ -67,7 +84,7 @@ def numpad_get_input():
     while True:
         keys = keypad.pressed_keys
         if keys:
-            print("Pressed: ", keys)
+            print("Pressed:", keys[0])
             return keys[0]
 
 def oled_update(text):
@@ -98,5 +115,6 @@ def oled_off():
 def oled_on():
     bus.write_byte_data(OLED_ADDRESS, OLED_REGADDR, OLED_DISPON)
 
-def position_servo(angle):
-    pass
+def servo_position(angle):
+    inc = int(angle * 100000 / 180)
+    pi.hardware_PWM(pwm_pin, 50, 50000 + inc)
