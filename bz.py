@@ -15,12 +15,12 @@ import adafruit_ssd1306
 # OLED specs
 OLED_WIDTH = 128
 OLED_HEIGHT = 64
-OLED_ADDRESS = 0x3c
+OLED_ADDRESS = 0x3C
 OLED_REGADDR = 0x00
 OLED_DISPOFF = 0xAE
 OLED_DISPON  = 0xAF
 
-# Initialize I2C library busio
+# Initialize smbus and I2C library busio
 bus = smbus.SMBus(1)
 i2c = busio.I2C(board.SCL, board.SDA)
 oled = adafruit_ssd1306.SSD1306_I2C(OLED_WIDTH, OLED_HEIGHT, i2c, addr=OLED_ADDRESS)
@@ -58,7 +58,7 @@ def load_cell_detect_phone():
     else:
         return False
 
-def get_numpad_input():
+def numpad_get_input():
     cols = [digitalio.DigitalInOut(x) for x in (board.D26, board.D20, board.D21)]
     rows = [digitalio.DigitalInOut(x) for x in (board.D5, board.D6, board.D13, board.D19)]
     keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
@@ -70,7 +70,7 @@ def get_numpad_input():
             print("Pressed: ", keys)
             return keys
 
-def oled_text(text):
+def oled_update(text):
     # Graphics stuff - create a canvas to draw/write on
     image = Image.new("1", (oled.width, oled.height))
     draw = ImageDraw.Draw(image)
