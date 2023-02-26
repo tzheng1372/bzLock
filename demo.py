@@ -12,10 +12,10 @@ bz.setup_numpad()
 
 while (1):
     print("enter 4 digits:")
-    a = bz.read_numpad
-    b = bz.read_numpad
-    c = bz.read_numpad
-    d = bz.read_numpad
+    a = bz.read_numpad()
+    b = bz.read_numpad()
+    c = bz.read_numpad()
+    d = bz.read_numpad()
     print(a, b, c, d)
 
     bz.text_to_display("text")
