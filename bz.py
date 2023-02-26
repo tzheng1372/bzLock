@@ -11,8 +11,6 @@ from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
 
-display = None
-keypad = None
 
 # Initialize FSR
 ADC_Start = 0b00000001
@@ -79,6 +77,7 @@ def setup_numpad():
     rows = [digitalio.DigitalInOut(x) for x in (
         board.D5, board.D6, board.D13, board.D19)]
     keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
+    global keypad
     keypad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
 
 
@@ -91,6 +90,7 @@ def read_numpad():
 
 
 def setup_display():
+    global display
     display = sh1106(i2c(port=1, address=0x3C))
 
 
