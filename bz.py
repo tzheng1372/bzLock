@@ -4,9 +4,8 @@ import pigpio
 import RPi.GPIO as GPIO
 import spidev
 
-from hx711 import HX711
 import adafruit_matrixkeypad
-
+from hx711 import HX711
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
