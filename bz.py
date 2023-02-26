@@ -1,6 +1,7 @@
 import board
 import digitalio
 import pigpio
+import time
 import RPi.GPIO as GPIO
 import spidev
 
@@ -11,6 +12,7 @@ from luma.core.render import canvas
 from luma.oled.device import sh1106
 
 display = None
+keypad = None
 
 # Initialize FSR
 ADC_Start = 0b00000001
@@ -71,7 +73,7 @@ def load_cell_shut_down():
     hx.power_down()
 
 
-def numpad_get_input():
+def setup_numpad():
     cols = [digitalio.DigitalInOut(x)
             for x in (board.D26, board.D20, board.D21)]
     rows = [digitalio.DigitalInOut(x) for x in (
@@ -79,11 +81,13 @@ def numpad_get_input():
     keys = ((1, 2, 3), (4, 5, 6), (7, 8, 9), ("*", 0, "#"))
     keypad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
 
+
+def read_numpad():
     while True:
         keys = keypad.pressed_keys
         if keys:
-            print("Pressed:", keys[0])
-            return keys[0]
+            time.sleep(0.3)
+            return chr(keys[0])
 
 
 def setup_display():
