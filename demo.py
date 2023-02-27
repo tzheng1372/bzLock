@@ -18,13 +18,15 @@ while (1):
     c = bz.read_numpad()
     d = bz.read_numpad()
     print("you entered:", a, b, c, d)
+    time.sleep(3)
 
     print("showing text")
-    bz.text_to_display("text")
+    bz.text_to_display("88:88")
     time.sleep(3)
     print("clearing text")
     bz.clear_display()
     time.sleep(3)
-    
+
     print("positioning servo")
     bz.position_servo(0)
+    time.sleep(3)

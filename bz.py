@@ -85,8 +85,7 @@ class bzLock:
     def clear_display(self):
         if self.display:
             with canvas(self.display) as draw:
-                draw.rectangle(self.display.bounding_box,
-                               outline="white", fill="black")
+                draw.rectangle(self.display.bounding_box, fill="black")
         else:
             print("Display has not been set up")
 
@@ -94,7 +93,7 @@ class bzLock:
         if self.display:
             with canvas(self.display) as draw:
                 self.clear_display()
-                draw.text((30, 40), text, fill="white")
+                draw.text((0, 0), text, fill="white")
         else:
             print("Display has not been set up")
 
