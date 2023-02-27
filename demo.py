@@ -13,6 +13,7 @@ TIME = ImageFont.truetype("IBMPlexMono-Regular.ttf", size=44)
 bz = bz.bzLock()
 bz.setup_display()
 bz.setup_numpad()
+bz.position_servo(0)  # Unlock the box
 
 while (1):
     print("enter 4 digits:")
