@@ -10,9 +10,7 @@ from hx711 import HX711
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
-from PIL import ImageFont
 
-FONT = ImageFont.truetype("IBMPlexMono-Regular.ttf", size=44)
 
 # Initialize FSR
 ADC_Start = 0b00000001
@@ -91,11 +89,11 @@ class bzLock:
         else:
             print("Display has not been set up")
 
-    def text_to_display(self, text):
+    def text_to_display(self, text, font=None):
         if self.display:
             with canvas(self.display) as draw:
                 self.clear_display()
-                draw.text((0, 0), text, fill="white", font=FONT)
+                draw.text((0, 0), text, fill="white", font=font)
         else:
             print("Display has not been set up")
 
