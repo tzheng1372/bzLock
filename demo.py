@@ -8,6 +8,8 @@ import time
 # load_cell_shut_down()
 
 bz = bz.bzLock()
+bz.setup_display()
+bz.setup_numpad()
 
 while (1):
     print("enter 4 digits:")
@@ -15,11 +17,14 @@ while (1):
     b = bz.read_numpad()
     c = bz.read_numpad()
     d = bz.read_numpad()
-    print(a, b, c, d)
+    print("you entered:", a, b, c, d)
 
+    print("showing text")
     bz.text_to_display("text")
     time.sleep(3)
+    print("clearing text")
     bz.clear_display()
     time.sleep(3)
-
+    
+    print("positioning servo")
     bz.position_servo(0)
