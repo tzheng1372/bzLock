@@ -12,7 +12,7 @@ from luma.core.render import canvas
 from luma.oled.device import sh1106
 from PIL import ImageFont
 
-FONT = ImageFont.truetype("Gidole-Regular.ttf", size=32)
+FONT = ImageFont.truetype("RobotoMono.ttf", size=32)
 
 # Initialize FSR
 ADC_Start = 0b00000001
