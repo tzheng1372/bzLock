@@ -12,7 +12,7 @@ from luma.core.render import canvas
 from luma.oled.device import sh1106
 from PIL import ImageFont
 
-FONT = ImageFont.truetype("RobotoMono.ttf", size=32)
+FONT = ImageFont.truetype("RobotoMono.ttf", size=40)
 
 # Initialize FSR
 ADC_Start = 0b00000001
@@ -95,8 +95,7 @@ class bzLock:
         if self.display:
             with canvas(self.display) as draw:
                 self.clear_display()
-                draw.text((0, 0), text, fill="white",
-                          align="center", font=FONT)
+                draw.text(text, fill="white", align="center", font=FONT)
         else:
             print("Display has not been set up")
 
