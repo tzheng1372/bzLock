@@ -24,10 +24,6 @@ spi.max_speed_hz = 1200000
 # Initialize LC
 hx = HX711(dout_pin=17, pd_sck_pin=27)
 
-# Initialize servo motor
-pwm_pin = 12
-pi = pigpio.pi()
-
 
 def callback_fn(FSR_pin):
     return True
@@ -71,40 +67,63 @@ def load_cell_shut_down():
     hx.power_down()
 
 
-def setup_numpad():
-    cols = [digitalio.DigitalInOut(x)
-            for x in (board.D26, board.D20, board.D21)]
-    rows = [digitalio.DigitalInOut(x) for x in (
-        board.D5, board.D6, board.D13, board.D19)]
-    keys = (('1', '2', '3'), ('4', '5', '6'), ('7', '8', '9'), ('*', '0', '#'))
-    global keypad
-    keypad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
+class bzLock:
+    def __init__(self):
+        self.display = None
+        self.numpad = None
 
+    def setup_display(self):
+        try:
+            self.display = sh1106(i2c(port=1, address=0x3C))
+            self.clear_display()
+            return True
+        except OSError:
+            self.display = None
+            print("Display is not connected")
+            return False
 
-def read_numpad():
-    while True:
-        keys = keypad.pressed_keys
-        if keys:
-            time.sleep(0.3)
-            return keys[0]
+    def clear_display(self):
+        if self.display:
+            with canvas(self.display) as draw:
+                draw.rectangle(self.display.bounding_box,
+                               outline="white", fill="black")
+        else:
+            print("Display has not been set up")
 
+    def text_to_display(self, text):
+        if self.display:
+            with canvas(self.display) as draw:
+                self.clear_display()
+                draw.text((30, 40), text, fill="white")
+        else:
+            print("Display has not been set up")
 
-def setup_display():
-    global display
-    display = sh1106(i2c(port=1, address=0x3C))
+    def setup_numpad(self):
+        cols = [digitalio.DigitalInOut(x)
+                for x in (board.D26, board.D20, board.D21)]
+        rows = [digitalio.DigitalInOut(x) for x in (
+            board.D5, board.D6, board.D13, board.D19)]
+        keys = (('1', '2', '3'), ('4', '5', '6'),
+                ('7', '8', '9'), ('*', '0', '#'))
+        try:
+            self.numpad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
+            return True
+        except OSError:
+            self.display = None
+            print("Numpad is not connected")
+            return False
 
+    def read_numpad(self):
+        if self.numpad:
+            while True:
+                keys = self.numpad.pressed_keys
+                if keys:
+                    time.sleep(0.3)
+                    return keys[0]
+        else:
+            print("Numpad has not been set up")
 
-def clear_display():
-    with canvas(display) as draw:
-        draw.rectangle(display.bounding_box, outline="white", fill="black")
-
-
-def text_to_display(text):
-    with canvas(display) as draw:
-        draw.rectangle(display.bounding_box, outline="white", fill="black")
-        draw.text((30, 40), text, fill="white")
-
-
-def servo_position(angle):
-    inc = int(angle * 100000 / 180)
-    pi.hardware_PWM(pwm_pin, 50, 50000 + inc)
+    def position_servo(self, angle):
+        pwm_pin = 12
+        inc = int(angle * 100000 / 180)
+        pigpio.pi().hardware_PWM(pwm_pin, 50, 50000 + inc)

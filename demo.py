@@ -7,8 +7,7 @@ import time
 # load_cell_get_weight()
 # load_cell_shut_down()
 
-bz.setup_display()
-bz.setup_numpad()
+bz = bz.bzLock()
 
 while (1):
     print("enter 4 digits:")
@@ -19,6 +18,8 @@ while (1):
     print(a, b, c, d)
 
     bz.text_to_display("text")
-    time.sleep(2)
+    time.sleep(3)
     bz.clear_display()
-    time.sleep(2)
+    time.sleep(3)
+
+    bz.position_servo(0)
