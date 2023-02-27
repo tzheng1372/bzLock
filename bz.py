@@ -95,7 +95,7 @@ class bzLock:
         if self.display:
             with canvas(self.display) as draw:
                 self.clear_display()
-                draw.text(text, fill="white", align="center", font=FONT)
+                draw.text((10, 10), text, fill="white", font=FONT)
         else:
             print("Display has not been set up")
 
