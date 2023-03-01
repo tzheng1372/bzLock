@@ -93,11 +93,11 @@ class bzLock:
         else:
             print("Display has not been set up")
 
-    def text_to_display(self, text, font=None):
+    def text_to_display(self, text, xy=(0, 0), font=None):
         if self.display:
             with canvas(self.display) as draw:
                 self.clear_display()
-                draw.text((0, 0), text, fill="white", font=font)
+                draw.text(xy, text, fill="white", font=font)
         else:
             print("Display has not been set up")
 
@@ -108,13 +108,7 @@ class bzLock:
             board.D5, board.D6, board.D13, board.D19)]
         keys = (('1', '2', '3'), ('4', '5', '6'),
                 ('7', '8', '9'), ('*', '0', '#'))
-        try:
-            self.numpad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
-            return True
-        except OSError:
-            self.display = None
-            print("Numpad is not connected")
-            return False
+        self.numpad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
 
     def read_numpad(self):
         if self.numpad:
