@@ -71,8 +71,9 @@ def update_display():
 
 def toggle_state():
     global sleeping
-    if bz.read_numpad() == '#':
-        sleeping = not sleeping
+    while True:
+        if bz.read_numpad() == '#':
+            sleeping = not sleeping
 
 
 sleeping = True
