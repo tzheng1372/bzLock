@@ -30,7 +30,7 @@ def clock_to_display():
             today_last_time = today_time
             with canvas(bz.display) as draw:
                 now = datetime.datetime.now()
-                today_date = now.strftime("%d %b %y")
+                today_date = now.strftime("%b/%d/%y")
                 margin = 4
                 cx = 30
                 cy = min(64, 64) / 2
