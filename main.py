@@ -6,13 +6,13 @@ import datetime
 import time
 import math
 
-sleeping = True
 
 display_lock = Lock()
 
 bz = bzLock()
 
 bz.setup_display()
+bz.setup_numpad()
 
 
 def posn(angle, arm_length):
@@ -60,8 +60,25 @@ def update_display():
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
                 display_lock.release()
-            time.sleep(0.1)
+        else:
+            display_lock.acquire()
+            with canvas(bz.display) as draw:
+                draw.text((0, 0), "timer")
+            display_lock.release()
+
+        time.sleep(0.1)
 
 
-clock_to_display_thread = Thread(target=update_display)
-clock_to_display_thread.start()
+def toggle_state():
+    global sleeping
+    if bz.read_numpad() == '1':
+        sleeping = False
+
+
+sleeping = True
+
+update_display = Thread(target=update_display)
+toggle_state = Thread(target=toggle_state)
+
+update_display.start()
+toggle_state.start()
