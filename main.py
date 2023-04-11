@@ -63,7 +63,7 @@ def update_display():
         else:
             display_lock.acquire()
             with canvas(bz.display) as draw:
-                draw.text((0, 0), "timer")
+                draw.text((0, 0), "timer", fill="white")
             display_lock.release()
 
         time.sleep(0.1)
