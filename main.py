@@ -50,7 +50,6 @@ def draw_clock(draw):
 
 def update_display():
     today_last_time = "Unknown"
-    timer = "Unknown"
     remaining_time: int = 1500
     while True:
         if sleeping:
@@ -66,13 +65,12 @@ def update_display():
             while remaining_time:
                 mins, secs = divmod(remaining_time, 60)
                 timer = "{:02d}:{:02d}".format(mins, secs)
-                print(timer, end="\r")
+                display_lock.acquire()
+                with canvas(bz.display) as draw:
+                    draw.text((0, 0), timer, fill="white")
+                display_lock.release()
                 time.sleep(1)
                 remaining_time -= 1
-            display_lock.acquire()
-            with canvas(bz.display) as draw:
-                draw.text((0, 0), timer, fill="white")
-            display_lock.release()
 
         time.sleep(0.1)
 
