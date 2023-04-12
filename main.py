@@ -71,7 +71,7 @@ def update_display():
                 with canvas(bz.display) as draw:
                     TIME = ImageFont.truetype(
                         "IBMPlexMono-Regular.ttf", size=44)
-                    draw.text((0, 0), timer, font=TIME)
+                    draw.text((0, 0), timer, fill="white", font=TIME)
                 display_lock.release()
                 time.sleep(1)
                 remaining_time -= 1
