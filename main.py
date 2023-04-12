@@ -2,6 +2,8 @@ from threading import Lock, Thread
 from luma.core.render import canvas
 from bz import bzLock
 
+from PIL import ImageFont
+
 import datetime
 import time
 import math
@@ -67,7 +69,9 @@ def update_display():
                 timer = "{:02d}:{:02d}".format(mins, secs)
                 display_lock.acquire()
                 with canvas(bz.display) as draw:
-                    draw.text((0, 0), timer, fill="white")
+                    TIME = ImageFont.truetype(
+                        "IBMPlexMono-Regular.ttf", size=44)
+                    draw.text((0, 0), timer, font=TIME)
                 display_lock.release()
                 time.sleep(1)
                 remaining_time -= 1
