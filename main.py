@@ -74,12 +74,10 @@ def toggle_state():
     while True:
         if bz.read_numpad() == '#':
             sleeping = not sleeping
+        time.sleep(0.1)
 
 
 sleeping = True
 
-update_display = Thread(target=update_display)
-toggle_state = Thread(target=toggle_state)
-
-update_display.start()
-toggle_state.start()
+Thread(target=update_display).start()
+Thread(target=toggle_state).start()
