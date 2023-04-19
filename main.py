@@ -141,6 +141,8 @@ state = states[0]
 last_time = "Unknown"
 
 remaining_time_queue = queue.Queue()
+timer_thread = None
+interrupt_flag = False
 
 
 DISPLAY_LOCK = threading.Lock()
