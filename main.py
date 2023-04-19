@@ -82,14 +82,13 @@ def update_display():
 
 def toggle_state():
     global state
-    while True:
-        if bz.read_numpad() == '#':
-            state = "focus_timer"
-        time.sleep(0.1)
+    if bz.read_numpad() == '#':
+        state = "focus_timer"
 
 
 def handler():
     update_display()
+    toggle_state()
     threading.Timer(0.1, handler).start()
 
 
