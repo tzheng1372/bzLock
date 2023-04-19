@@ -64,20 +64,30 @@ def update_display():
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
-    elif state in ["focus_timer", "rest_timer"]:
-        timer = 300
-        if state == "focus_timer" and not remaining_focus_time.empty():
+    elif state == "focus_timer":
+        if not remaining_focus_time.empty():
             timer = remaining_focus_time.get()
             remaining_focus_time.put(timer)
-        elif state == "rest_timer" and not remaining_rest_time.empty():
+            mins, secs = divmod(timer, 60)
+            timer = "{:02d}:{:02d}".format(mins, secs)
+            with DISPLAY_LOCK:
+                with canvas(bz.display) as draw:
+                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                        "IBMPlexMono-Regular.ttf", size=44))
+        else:
+            print("timer queue empty")
+    elif state == "rest_timer":
+        if not remaining_rest_time.empty():
             timer = remaining_rest_time.get()
             remaining_rest_time.put(timer)
-        mins, secs = divmod(timer, 60)
-        timer = "{:02d}:{:02d}".format(mins, secs)
-        with DISPLAY_LOCK:
-            with canvas(bz.display) as draw:
-                draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                    "IBMPlexMono-Regular.ttf", size=44))
+            mins, secs = divmod(timer, 60)
+            timer = "{:02d}:{:02d}".format(mins, secs)
+            with DISPLAY_LOCK:
+                with canvas(bz.display) as draw:
+                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                        "IBMPlexMono-Regular.ttf", size=44))
+        else:
+            print("timer queue empty")
 
     threading.Timer(0.1, update_display).start()
 
