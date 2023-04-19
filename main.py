@@ -2,7 +2,6 @@ import datetime
 import math
 import threading
 import time
-from queue import LifoQueue
 
 from PIL import ImageFont
 from luma.core.render import canvas
@@ -61,46 +60,29 @@ def update_display():
         today_time = now.strftime("%H:%M:%S")
         if today_time != last_time:
             last_time = today_time
-            DISPLAY_LOCK.acquire()
-            with canvas(bz.display) as draw:
-                draw_clock(draw)
-            DISPLAY_LOCK.release()
-    elif state == "focus_timer":
-        if not remaining_focus_time.empty():
-            timer = remaining_focus_time.get()
-            remaining_focus_time.put(timer)
-            mins, secs = divmod(timer, 60)
-            timer = "{:02d}:{:02d}".format(mins, secs)
-            DISPLAY_LOCK.acquire()
+            with DISPLAY_LOCK:
+                with canvas(bz.display) as draw:
+                    draw_clock(draw)
+    elif state in ["focus_timer", "rest_timer"]:
+        mins, secs = divmod(remaining_time, 60)
+        timer = "{:02d}:{:02d}".format(mins, secs)
+        with DISPLAY_LOCK:
             with canvas(bz.display) as draw:
                 draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
                     "IBMPlexMono-Regular.ttf", size=44))
-            DISPLAY_LOCK.release()
-        else:
-            print("timer queue empty")
-    elif state == "rest_timer":
-        if not remaining_rest_time.empty():
-            timer = remaining_rest_time.get()
-            remaining_rest_time.put(timer)
-            mins, secs = divmod(timer, 60)
-            timer = "{:02d}:{:02d}".format(mins, secs)
-            DISPLAY_LOCK.acquire()
-            with canvas(bz.display) as draw:
-                draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                    "IBMPlexMono-Regular.ttf", size=44))
-            DISPLAY_LOCK.release()
-        else:
-            print("timer queue empty")
 
     threading.Timer(0.1, update_display).start()
 
 
-def countdown_timer(num, queue):
-    if num == 0:
-        queue.put(num)
-        return
-    queue.put(num)
-    threading.Timer(1, countdown_timer, args=[num-1, queue]).start()
+def countdown_timer(count):
+    global remaining_time
+    remaining_time = count
+    while count > 0:
+        print(count)
+        count -= 1
+        remaining_time = count
+        time.sleep(1)
+    print("Time's up!")
 
 
 def switch_states():
@@ -108,10 +90,16 @@ def switch_states():
     while True:
         if bz.button1.is_pressed:
             state = "focus_timer"
-            countdown_timer(1500, remaining_focus_time)
+            countdown_thread = threading.Thread(
+                target=countdown_timer, args=[1500])
+            countdown_thread.start()
+            countdown_thread.join()
         elif bz.button2.is_pressed:
             state = "rest_timer"
-            countdown_timer(300, remaining_rest_time)
+            countdown_thread = threading.Thread(
+                target=countdown_timer, args=[300])
+            countdown_thread.start()
+            countdown_thread.join()
         elif bz.button3.is_pressed:
             state = "sleeping"
 
@@ -120,8 +108,7 @@ states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 
 last_time = "Unknown"
-remaining_focus_time = LifoQueue()
-remaining_rest_time = LifoQueue()
+remaining_time = 0
 
 update_display()
 threading.Thread(target=switch_states).start()
