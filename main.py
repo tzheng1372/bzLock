@@ -89,7 +89,7 @@ def update_display():
         else:
             print("timer queue empty")
 
-    threading.Timer(0.1, update_display).start()
+    threading.Timer(0.01, update_display).start()
 
 
 def countdown_timer(num, queue):
@@ -107,7 +107,7 @@ def switch_states():
         countdown_timer(1500, remaining_focus_time)
     elif bz.button2.is_pressed:
         state = "rest_timer"
-        countdown_timer(300, remaining_focus_time)
+        countdown_timer(300, remaining_rest_time)
     elif bz.button3.is_pressed:
         state = "sleeping"
     threading.Timer(0.1, switch_states).start()
