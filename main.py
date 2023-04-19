@@ -63,6 +63,7 @@ def update_display():
 
 
 def switch_states():
+    global state
     while True:
         if bz.button1.is_pressed:
             state = "focus_timer"
