@@ -5,11 +5,13 @@ import time
 import RPi.GPIO as GPIO
 import spidev
 
+
 import adafruit_matrixkeypad
 from hx711 import HX711
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
+from gpiozero import Button
 
 
 # Initialize FSR
@@ -22,7 +24,7 @@ ADC_CH0 = 0b10000000
 # spi.max_speed_hz = 1200000
 
 # Initialize LC
-#hx = HX711(dout_pin=17, pd_sck_pin=27)
+# hx = HX711(dout_pin=17, pd_sck_pin=27)
 
 
 # def callback_fn(FSR_pin):
@@ -75,6 +77,9 @@ class bzLock:
         self.display = None
         self.numpad = None
         self.spi = None
+        self.button1 = Button(17)
+        self.button2 = Button(27)
+        self.button3 = Button(22)
 
     def setup_display(self):
         try:
@@ -127,7 +132,7 @@ class bzLock:
 
     def setup_spi(self):
         self.spi = spidev.SpiDev()
-        self.spi.open(0,0)
+        self.spi.open(0, 0)
         self.spi.mode = 0b01
         self.spi.max_speed_hz = 1200000
 

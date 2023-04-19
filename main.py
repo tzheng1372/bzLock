@@ -16,6 +16,7 @@ bz = bzLock()
 
 bz.setup_display()
 bz.setup_numpad()
+bz.setup_buttons()
 
 
 def posn(angle, arm_length):
@@ -100,12 +101,12 @@ def countdown_timer(num, queue):
     threading.Timer(1, countdown_timer, args=[num-1, queue]).start()
 
 
-def toggle_state():
+def switch_states():
     global state
-    if bz.read_numpad() == '#':
+    if bz.button1.is_pressed:
         state = "focus_timer"
         countdown_timer(1500, remaining_focus_time)
-    threading.Timer(0.1, toggle_state).start()
+    threading.Timer(0.1, switch_states).start()
 
 
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
