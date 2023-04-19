@@ -61,19 +61,21 @@ def update_display():
         today_time = now.strftime("%H:%M:%S")
         if today_time != last_time:
             last_time = today_time
-            with DISPLAY_LOCK:
-                with canvas(bz.display) as draw:
-                    draw_clock(draw)
+            DISPLAY_LOCK.acquire()
+            with canvas(bz.display) as draw:
+                draw_clock(draw)
+            DISPLAY_LOCK.release()
     elif state == "focus_timer":
         if not remaining_focus_time.empty():
             timer = remaining_focus_time.get()
             remaining_focus_time.put(timer)
             mins, secs = divmod(timer, 60)
             timer = "{:02d}:{:02d}".format(mins, secs)
-            with DISPLAY_LOCK:
-                with canvas(bz.display) as draw:
-                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                        "IBMPlexMono-Regular.ttf", size=44))
+            DISPLAY_LOCK.acquire()
+            with canvas(bz.display) as draw:
+                draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                    "IBMPlexMono-Regular.ttf", size=44))
+            DISPLAY_LOCK.release()
         else:
             print("timer queue empty")
     elif state == "rest_timer":
@@ -82,14 +84,15 @@ def update_display():
             remaining_rest_time.put(timer)
             mins, secs = divmod(timer, 60)
             timer = "{:02d}:{:02d}".format(mins, secs)
-            with DISPLAY_LOCK:
-                with canvas(bz.display) as draw:
-                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                        "IBMPlexMono-Regular.ttf", size=44))
+            DISPLAY_LOCK.acquire()
+            with canvas(bz.display) as draw:
+                draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                    "IBMPlexMono-Regular.ttf", size=44))
+            DISPLAY_LOCK.release()
         else:
             print("timer queue empty")
 
-    threading.Timer(0.01, update_display).start()
+    threading.Timer(0.1, update_display).start()
 
 
 def countdown_timer(num, queue):
