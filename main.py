@@ -115,5 +115,5 @@ interrupt_flag = False
 DISPLAY_LOCK = threading.Lock()
 
 update_display_thread = threading.Thread(target=update_display)
-update_display_thread.start()
+update_display_thread.start()  # Start the update_display thread
 threading.Thread(target=switch_states).start()
