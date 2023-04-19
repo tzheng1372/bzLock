@@ -111,6 +111,7 @@ def focus_timer():
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
         remaining_time -= 1
+        remaining_time_queue.put(remaining_time)
     print("Focus timer ended.")
 
 
@@ -121,6 +122,7 @@ def rest_timer():
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
         remaining_time -= 1
+        remaining_time_queue.put(remaining_time)
     print("Rest timer ended.")
 
 
