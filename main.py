@@ -16,7 +16,6 @@ bz = bzLock()
 
 bz.setup_display()
 bz.setup_numpad()
-bz.setup_buttons()
 
 
 def posn(angle, arm_length):
