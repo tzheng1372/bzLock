@@ -55,13 +55,10 @@ def update_display():
         elif state in ["focus_timer", "rest_timer"]:
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
-                    with remaining_time_queue.mutex:  # Lock the queue to safely access the last element
-                        if not remaining_time_queue.empty():
-                            remaining_time = remaining_time_queue.queue[-1]
-                            mins, secs = divmod(remaining_time, 60)
-                            timer = f"{mins:02d}:{secs:02d}"
-                            draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                                "IBMPlexMono-Regular.ttf", size=44))
+                    mins, secs = divmod(60, 60)
+                    timer = f"{mins:02d}:{secs:02d}"
+                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                        "IBMPlexMono-Regular.ttf", size=44))
         time.sleep(0.1)
 
 
@@ -98,8 +95,7 @@ def timer_function():
         print(f"Remaining time: {remaining_time} seconds")
         time.sleep(1)
         remaining_time -= 1
-        if not interrupt_flag:
-            remaining_time_queue.put(remaining_time)
+        remaining_time_queue.put(remaining_time)
     print("Timer ended.")
 
 
@@ -116,6 +112,5 @@ interrupt_flag = False
 
 DISPLAY_LOCK = threading.Lock()
 
-update_display_thread = threading.Thread(target=update_display)
-update_display_thread.start()  # Start the update_display thread
+threading.Thread(target=update_display).start()
 threading.Thread(target=switch_states).start()
