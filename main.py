@@ -2,6 +2,7 @@ import datetime
 import math
 import threading
 import time
+import queue
 
 from PIL import ImageFont
 from luma.core.render import canvas
@@ -99,23 +100,24 @@ def switch_states():
 
 
 def start_focus_timer(num):
-    global remaining_time
-    remaining_time = num
+    global remaining_time_queue
+    remaining_time_queue.put(num)
     print("Starting focus timer for {} seconds...".format(num))
-    t = threading.Thread(target=focus_timer, args=(num,))
+    t = threading.Thread(target=focus_timer)
     t.start()
 
 
 def start_rest_timer(num):
-    global remaining_time
-    remaining_time = num
+    global remaining_time_queue
+    remaining_time_queue.put(num)
     print("Starting rest timer for {} seconds...".format(num))
-    t = threading.Thread(target=rest_timer, args=(num,))
+    t = threading.Thread(target=rest_timer)
     t.start()
 
 
-def focus_timer(num):
-    global remaining_time
+def focus_timer():
+    global remaining_time_queue
+    remaining_time = remaining_time_queue.get()
     while remaining_time > 0:
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
@@ -123,8 +125,9 @@ def focus_timer(num):
     print("Focus timer ended.")
 
 
-def rest_timer(num):
-    global remaining_time
+def rest_timer():
+    global remaining_time_queue
+    remaining_time = remaining_time_queue.get()
     while remaining_time > 0:
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
@@ -136,7 +139,7 @@ states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 
 last_time = "Unknown"
-remaining_time = 0
+remaining_time_queue = queue.Queue()
 
 update_display()
 threading.Thread(target=switch_states).start()
