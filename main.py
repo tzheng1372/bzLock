@@ -53,12 +53,13 @@ def update_display():
                 if state == "sleeping":
                     draw_clock(draw)
                 elif state in ["focus_timer", "rest_timer"]:
-                    remaining_time = get_remaining_time()
-                    if remaining_time is not None:
-                        mins, secs = divmod(remaining_time, 60)
-                        timer = f"{mins:02d}:{secs:02d}"
-                        draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                            "IBMPlexMono-Regular.ttf", size=44))
+                    with remaining_time_queue.mutex:  # Lock the queue to safely access the last element
+                        if not remaining_time_queue.empty():
+                            remaining_time = remaining_time_queue.queue[-1]
+                            mins, secs = divmod(remaining_time, 60)
+                            timer = f"{mins:02d}:{secs:02d}"
+                            draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                                "IBMPlexMono-Regular.ttf", size=44))
         time.sleep(0.1)
 
 
@@ -95,13 +96,9 @@ def timer_function():
         print(f"Remaining time: {remaining_time} seconds")
         time.sleep(1)
         remaining_time -= 1
+        if not interrupt_flag:
+            remaining_time_queue.put(remaining_time)
     print("Timer ended.")
-
-
-def get_remaining_time():
-    if not remaining_time_queue.empty():
-        return remaining_time_queue.queue[-1]
-    return None
 
 
 bz = bzLock()
