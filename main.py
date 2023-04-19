@@ -90,18 +90,32 @@ def switch_states():
     while True:
         if bz.button1.is_pressed:
             state = "focus_timer"
-            focus_timer(1500)
+            start_focus_timer(1500)
         elif bz.button2.is_pressed:
             state = "rest_timer"
-            rest_timer(300)
+            start_rest_timer(300)
         elif bz.button3.is_pressed:
             state = "sleeping"
 
 
+def start_focus_timer(num):
+    global remaining_time
+    remaining_time = num
+    print("Starting focus timer for {} seconds...".format(num))
+    t = threading.Thread(target=focus_timer, args=(num,))
+    t.start()
+
+
+def start_rest_timer(num):
+    global remaining_time
+    remaining_time = num
+    print("Starting rest timer for {} seconds...".format(num))
+    t = threading.Thread(target=rest_timer, args=(num,))
+    t.start()
+
+
 def focus_timer(num):
     global remaining_time
-    print("Starting focus timer for {} seconds...".format(num))
-    remaining_time = num
     while remaining_time > 0:
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
@@ -111,8 +125,6 @@ def focus_timer(num):
 
 def rest_timer(num):
     global remaining_time
-    print("Starting rest timer for {} seconds...".format(num))
-    remaining_time = num
     while remaining_time > 0:
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
