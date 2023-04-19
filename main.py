@@ -48,11 +48,13 @@ def draw_clock(draw):
 
 def update_display():
     while True:
-        with DISPLAY_LOCK:
-            with canvas(bz.display) as draw:
-                if state == "sleeping":
+        if state == "sleeping":
+            with DISPLAY_LOCK:
+                with canvas(bz.display) as draw:
                     draw_clock(draw)
-                elif state in ["focus_timer", "rest_timer"]:
+        elif state in ["focus_timer", "rest_timer"]:
+            with DISPLAY_LOCK:
+                with canvas(bz.display) as draw:
                     with remaining_time_queue.mutex:  # Lock the queue to safely access the last element
                         if not remaining_time_queue.empty():
                             remaining_time = remaining_time_queue.queue[-1]
