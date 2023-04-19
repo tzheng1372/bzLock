@@ -84,10 +84,9 @@ def update_display():
 
 def toggle_state():
     global state
-    while True:
-        if bz.read_numpad() == '#':
-            state = "focus_timer"
-        time.sleep(0.1)
+    if bz.read_numpad() == '#':
+        state = "focus_timer"
+    threading.Timer(0.1, toggle_state).start()
 
 
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
@@ -98,5 +97,4 @@ remaining_focus_time = LifoQueue()
 remaining_rest_time = LifoQueue()
 
 update_display()
-
-threading.Thread(target=toggle_state).start()
+toggle_state()
