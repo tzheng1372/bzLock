@@ -117,8 +117,8 @@ states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 
 last_time = "Unknown"
-remaining_focus_time = LifoQueue(maxsize=1)
-remaining_rest_time = LifoQueue(maxsize=1)
+remaining_focus_time = LifoQueue(maxsize=2)
+remaining_rest_time = LifoQueue(maxsize=2)
 
 update_display()
 switch_states()
