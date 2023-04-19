@@ -79,17 +79,15 @@ def update_display():
                 draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
                     "IBMPlexMono-Regular.ttf", size=44))
 
+    threading.Timer(0.1, update_display).start()
+
 
 def toggle_state():
     global state
-    if bz.read_numpad() == '#':
-        state = "focus_timer"
-
-
-def handler():
-    update_display()
-    toggle_state()
-    threading.Timer(0.1, handler).start()
+    while True:
+        if bz.read_numpad() == '#':
+            state = "focus_timer"
+        time.sleep(0.1)
 
 
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
@@ -99,6 +97,6 @@ last_time = "Unknown"
 remaining_focus_time = LifoQueue()
 remaining_rest_time = LifoQueue()
 
-handler()
+update_display()
 
 threading.Thread(target=toggle_state).start()
