@@ -116,4 +116,4 @@ remaining_focus_time = LifoQueue()
 remaining_rest_time = LifoQueue()
 
 update_display()
-toggle_state()
+switch_states()
