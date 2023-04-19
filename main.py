@@ -78,11 +78,12 @@ def switch_states():
 
 def start_timer(num):
     global timer_thread, interrupt_flag
-    remaining_time_queue.put(num)
-    print(f"Starting timer for {num} seconds...")
     if timer_thread and timer_thread.is_alive():
         interrupt_flag = True
         timer_thread.join()
+
+    remaining_time_queue.put(num)
+    print(f"Starting timer for {num} seconds...")
     interrupt_flag = False
     timer_thread = threading.Thread(target=timer_function)
     timer_thread.start()
