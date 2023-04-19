@@ -10,14 +10,6 @@ from luma.core.render import canvas
 from bz import bzLock
 
 
-DISPLAY_LOCK = threading.Lock()
-
-bz = bzLock()
-
-bz.setup_display()
-bz.setup_numpad()
-
-
 def posn(angle, arm_length):
     dx = int(math.cos(math.radians(angle)) * arm_length)
     dy = int(math.sin(math.radians(angle)) * arm_length)
@@ -65,12 +57,13 @@ def update_display():
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
     elif state in ["focus_timer", "rest_timer"]:
-        mins, secs = divmod(remaining_time, 60)
-        timer = "{:02d}:{:02d}".format(mins, secs)
-        with DISPLAY_LOCK:
-            with canvas(bz.display) as draw:
-                draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                    "IBMPlexMono-Regular.ttf", size=44))
+        with TIMER_LOCK:
+            mins, secs = divmod(remaining_time, 60)
+            timer = "{:02d}:{:02d}".format(mins, secs)
+            with DISPLAY_LOCK:
+                with canvas(bz.display) as draw:
+                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                        "IBMPlexMono-Regular.ttf", size=44))
 
     threading.Timer(0.1, update_display).start()
 
@@ -100,25 +93,33 @@ def switch_states():
 
 
 def start_focus_timer(num):
-    global remaining_time_queue
+    global remaining_time_queue, timer_thread, interrupt_flag
     remaining_time_queue.put(num)
     print("Starting focus timer for {} seconds...".format(num))
-    t = threading.Thread(target=focus_timer)
-    t.start()
+    if timer_thread and timer_thread.is_alive():
+        interrupt_flag = True
+        timer_thread.join()
+    interrupt_flag = False
+    timer_thread = threading.Thread(target=focus_timer)
+    timer_thread.start()
 
 
 def start_rest_timer(num):
-    global remaining_time_queue
+    global remaining_time_queue, timer_thread, interrupt_flag
     remaining_time_queue.put(num)
     print("Starting rest timer for {} seconds...".format(num))
-    t = threading.Thread(target=rest_timer)
-    t.start()
+    if timer_thread and timer_thread.is_alive():
+        interrupt_flag = True
+        timer_thread.join()
+    interrupt_flag = False
+    timer_thread = threading.Thread(target=rest_timer)
+    timer_thread.start()
 
 
 def focus_timer():
-    global remaining_time_queue
+    global remaining_time_queue, interrupt_flag
     remaining_time = remaining_time_queue.get()
-    while remaining_time > 0:
+    while remaining_time > 0 and not interrupt_flag:
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
         remaining_time -= 1
@@ -126,20 +127,37 @@ def focus_timer():
 
 
 def rest_timer():
-    global remaining_time_queue
+    global remaining_time_queue, interrupt_flag
     remaining_time = remaining_time_queue.get()
-    while remaining_time > 0:
+    while remaining_time > 0 and not interrupt_flag:
         print("Remaining time: {} seconds".format(remaining_time))
         time.sleep(1)
         remaining_time -= 1
     print("Rest timer ended.")
 
 
+def get_remaining_time():
+    with TIMER_LOCK:
+        return remaining_time
+
+
+bz = bzLock()
+bz.setup_display()
+bz.setup_numpad()
+
+
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 
 last_time = "Unknown"
+
 remaining_time_queue = queue.Queue()
+timer_thread = None
+interrupt_flag = False
+remaining_time = 0
+DISPLAY_LOCK = threading.Lock()
+TIMER_LOCK = threading.Lock()
+
 
 update_display()
 threading.Thread(target=switch_states).start()
