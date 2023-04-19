@@ -102,23 +102,23 @@ def countdown_timer(num, queue):
 
 def switch_states():
     global state
-    if bz.button1.is_pressed:
-        state = "focus_timer"
-        countdown_timer(1500, remaining_focus_time)
-    elif bz.button2.is_pressed:
-        state = "rest_timer"
-        countdown_timer(300, remaining_rest_time)
-    elif bz.button3.is_pressed:
-        state = "sleeping"
-    threading.Timer(0.1, switch_states).start()
+    while True:
+        if bz.button1.is_pressed:
+            state = "focus_timer"
+            countdown_timer(1500, remaining_focus_time)
+        elif bz.button2.is_pressed:
+            state = "rest_timer"
+            countdown_timer(300, remaining_rest_time)
+        elif bz.button3.is_pressed:
+            state = "sleeping"
 
 
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 
 last_time = "Unknown"
-remaining_focus_time = LifoQueue(maxsize=2)
-remaining_rest_time = LifoQueue(maxsize=2)
+remaining_focus_time = LifoQueue(maxsize=1)
+remaining_rest_time = LifoQueue(maxsize=1)
 
 update_display()
-switch_states()
+threading.Thread(target=switch_states).start()
