@@ -105,12 +105,14 @@ def switch_states():
     if bz.button1.is_pressed:
         state = "focus_timer"
         countdown_timer(1500, remaining_focus_time)
+        threading.Timer(0.1, switch_states).start()
     if bz.button2.is_pressed:
         state = "rest_timer"
         countdown_timer(300, remaining_focus_time)
+        threading.Timer(0.1, switch_states).start()
     if bz.button3.is_pressed:
         state = "sleeping"
-    threading.Timer(0.1, switch_states).start()
+        threading.Timer(0.1, switch_states).start()
 
 
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
