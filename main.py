@@ -82,10 +82,19 @@ def update_display():
     threading.Timer(0.1, update_display).start()
 
 
+def countdown_timer(num, queue):
+    if num == 0:
+        queue.put(num)
+        return
+    queue.put(num)
+    threading.Timer(1, countdown_timer, args=[num-1, queue]).start()
+
+
 def toggle_state():
     global state
     if bz.read_numpad() == '#':
         state = "focus_timer"
+        countdown_timer(1500, remaining_focus_time)
     threading.Timer(0.1, toggle_state).start()
 
 
