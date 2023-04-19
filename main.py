@@ -1,15 +1,16 @@
-from threading import Lock, Thread
-from luma.core.render import canvas
-from bz import bzLock
+import datetime
+import math
+import threading
+import time
+from queue import LifoQueue
 
 from PIL import ImageFont
+from luma.core.render import canvas
 
-import datetime
-import time
-import math
+from bz import bzLock
 
 
-display_lock = Lock()
+DISPLAY_LOCK = threading.Lock()
 
 bz = bzLock()
 
@@ -29,65 +30,76 @@ def draw_clock(draw):
     today_time = now.strftime("%H:%M:%S")
     margin = 4
     cx = 30
-    cy = min(64, 64) / 2
+    cy = 64 // 2
     left = cx - cy
     right = cx + cy
+
     hrs_angle = 270 + (30 * (now.hour + (now.minute / 60.0)))
     hrs = posn(hrs_angle, cy - margin - 7)
+
     min_angle = 270 + (6 * now.minute)
     mins = posn(min_angle, cy - margin - 2)
+
     sec_angle = 270 + (6 * now.second)
     secs = posn(sec_angle, cy - margin - 2)
-    draw.ellipse((left + margin, margin, right - margin,
-                 min(128, 64) - margin), outline="white")
+
+    draw.ellipse((left + margin, margin, right -
+                 margin, 64 - margin), outline="white")
     draw.line((cx, cy, cx + hrs[0], cy + hrs[1]), fill="white")
     draw.line((cx, cy, cx + mins[0], cy + mins[1]), fill="white")
     draw.line((cx, cy, cx + secs[0], cy + secs[1]), fill="red")
     draw.ellipse((cx - 2, cy - 2, cx + 2, cy + 2),
                  fill="white", outline="white")
-    draw.text((2 * (cx + margin), cy - 8),
-              today_date, fill="yellow")
+    draw.text((2 * (cx + margin), cy - 8), today_date, fill="yellow")
     draw.text((2 * (cx + margin), cy), today_time, fill="yellow")
 
 
 def update_display():
-    today_last_time = "Unknown"
-    remaining_time: int = 1500
-    while True:
-        if sleeping:
-            now = datetime.datetime.now()
-            today_time = now.strftime("%H:%M:%S")
-            if today_time != today_last_time:
-                today_last_time = today_time
-                display_lock.acquire()
+    global last_time
+    if state == "sleeping":
+        now = datetime.datetime.now()
+        today_time = now.strftime("%H:%M:%S")
+        if today_time != last_time:
+            last_time = today_time
+            with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
-                display_lock.release()
-        else:
-            while remaining_time:
-                mins, secs = divmod(remaining_time, 60)
-                timer = "{:02d}:{:02d}".format(mins, secs)
-                display_lock.acquire()
-                with canvas(bz.display) as draw:
-                    TIME = ImageFont.truetype(
-                        "IBMPlexMono-Regular.ttf", size=44)
-                    draw.text((0, 0), timer, fill="white", font=TIME)
-                display_lock.release()
-                time.sleep(1)
-                remaining_time -= 1
-
-        time.sleep(0.1)
+    elif state in ["focus_timer", "rest_timer"]:
+        timer = 300
+        if state == "focus_timer" and not remaining_focus_time.empty():
+            timer = remaining_focus_time.get()
+            remaining_focus_time.put(timer)
+        elif state == "rest_timer" and not remaining_rest_time.empty():
+            timer = remaining_rest_time.get()
+            remaining_rest_time.put(timer)
+        mins, secs = divmod(timer, 60)
+        timer = "{:02d}:{:02d}".format(mins, secs)
+        with DISPLAY_LOCK:
+            with canvas(bz.display) as draw:
+                draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                    "IBMPlexMono-Regular.ttf", size=44))
 
 
 def toggle_state():
-    global sleeping
+    global state
     while True:
         if bz.read_numpad() == '#':
-            sleeping = not sleeping
+            state = "focus_timer"
         time.sleep(0.1)
 
 
-sleeping = True
+def handler():
+    update_display()
+    threading.Timer(0.1, handler).start()
 
-Thread(target=update_display).start()
-Thread(target=toggle_state).start()
+
+states = ["sleeping", "focus_timer", "rest_timer", "setting"]
+state = states[0]
+
+last_time = "Unknown"
+remaining_focus_time = LifoQueue()
+remaining_rest_time = LifoQueue()
+
+handler()
+
+threading.Thread(target=toggle_state).start()
