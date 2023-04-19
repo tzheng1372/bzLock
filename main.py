@@ -1,135 +1,121 @@
-import math
 import datetime
+import math
 import threading
-import queue
 import time
-from PIL import ImageFont
+import queue
 
+from PIL import ImageFont
 from luma.core.render import canvas
 
+from bz import bzLock
 
-class Clock:
-    def __init__(self, bz):
-        self.bz = bz
-        self.bz.setup_display()
-        self.bz.setup_numpad()
 
-        self.states = ["sleeping", "focus_timer", "rest_timer", "setting"]
-        self.state = self.states[0]
+def posn(angle, arm_length):
+    dx = int(math.cos(math.radians(angle)) * arm_length)
+    dy = int(math.sin(math.radians(angle)) * arm_length)
+    return (dx, dy)
 
-        self.last_time = "Unknown"
-        self.remaining_time_queue = queue.Queue()
-        self.timer_thread = None
-        self.interrupt_flag = False
 
-        self.DISPLAY_LOCK = threading.Lock()
+def draw_clock(draw):
+    now = datetime.datetime.now()
+    today_date = now.strftime("%b/%d/%y")
+    today_time = now.strftime("%H:%M:%S")
+    margin = 4
+    cx = 30
+    cy = 64 // 2
+    left = cx - cy
+    right = cx + cy
 
-        self.update_display()
-        threading.Thread(target=self.switch_states).start()
+    hrs_angle = 270 + (30 * (now.hour + (now.minute / 60.0)))
+    hrs = posn(hrs_angle, cy - margin - 7)
 
-    def posn(self, angle, arm_length):
-        dx = int(math.cos(math.radians(angle)) * arm_length)
-        dy = int(math.sin(math.radians(angle)) * arm_length)
-        return (dx, dy)
+    min_angle = 270 + (6 * now.minute)
+    mins = posn(min_angle, cy - margin - 2)
 
-    def draw_clock(self, draw):
-        now = datetime.datetime.now()
-        today_date = now.strftime("%b/%d/%y")
-        today_time = now.strftime("%H:%M:%S")
-        margin = 4
-        cx = 30
-        cy = 64 // 2
-        left = cx - cy
-        right = cx + cy
+    sec_angle = 270 + (6 * now.second)
+    secs = posn(sec_angle, cy - margin - 2)
 
-        hrs_angle = 270 + (30 * (now.hour + (now.minute / 60.0)))
-        hrs = self.posn(hrs_angle, cy - margin - 7)
+    draw.ellipse((left + margin, margin, right -
+                 margin, 64 - margin), outline="white")
+    draw.line((cx, cy, cx + hrs[0], cy + hrs[1]), fill="white")
+    draw.line((cx, cy, cx + mins[0], cy + mins[1]), fill="white")
+    draw.line((cx, cy, cx + secs[0], cy + secs[1]), fill="red")
+    draw.ellipse((cx - 2, cy - 2, cx + 2, cy + 2),
+                 fill="white", outline="white")
+    draw.text((2 * (cx + margin), cy - 8), today_date, fill="yellow")
+    draw.text((2 * (cx + margin), cy), today_time, fill="yellow")
 
-        min_angle = 270 + (6 * now.minute)
-        mins = self.posn(min_angle, cy - margin - 2)
 
-        sec_angle = 270 + (6 * now.second)
-        secs = self.posn(sec_angle, cy - margin - 2)
+def update_display():
+    while True:
+        with DISPLAY_LOCK:
+            with canvas(bz.display) as draw:
+                if state == "sleeping":
+                    draw_clock(draw)
+                elif state in ["focus_timer", "rest_timer"]:
+                    remaining_time = get_remaining_time()
+                    if remaining_time is not None:
+                        mins, secs = divmod(remaining_time, 60)
+                        timer = f"{mins:02d}:{secs:02d}"
+                        draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+                            "IBMPlexMono-Regular.ttf", size=44))
+        time.sleep(0.1)
 
-        draw.ellipse((left + margin, margin, right -
-                     margin, 64 - margin), outline="white")
-        draw.line((cx, cy, cx + hrs[0], cy + hrs[1]), fill="white")
-        draw.line((cx, cy, cx + mins[0], cy + mins[1]), fill="white")
-        draw.line((cx, cy, cx + secs[0], cy + secs[1]), fill="red")
-        draw.ellipse((cx - 2, cy - 2, cx + 2, cy + 2),
-                     fill="white", outline="white")
-        draw.text((2 * (cx + margin), cy - 8), today_date, fill="yellow")
-        draw.text((2 * (cx + margin), cy), today_time, fill="yellow")
 
-    def update_display(self):
-        if self.state == "sleeping":
-            now = datetime.datetime.now()
-            today_time = now.strftime("%H:%M:%S")
-            if today_time != self.last_time:
-                self.last_time = today_time
-                with self.DISPLAY_LOCK:
-                    with canvas(self.bz.display) as draw:
-                        self.draw_clock(draw)
-        elif self.state in ["focus_timer", "rest_timer"]:
-            mins, secs = divmod(self.get_remaining_time(), 60)
-            timer = "{:02d}:{:02d}".format(mins, secs)
-            with self.DISPLAY_LOCK:
-                with canvas(self.bz.display) as draw:
-                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                        "IBMPlexMono-Regular.ttf", size=44))
+def switch_states():
+    while True:
+        if bz.button1.is_pressed:
+            state = "focus_timer"
+            start_timer(1500)
+        elif bz.button2.is_pressed:
+            state = "rest_timer"
+            start_timer(300)
+        elif bz.button3.is_pressed:
+            state = "sleeping"
+        time.sleep(0.1)
 
-        threading.Timer(0.1, self.update_display).start()
 
-    def switch_states(self):
-        while True:
-            if self.bz.button1.is_pressed:
-                self.state = "focus_timer"
-                self.start_focus_timer(1500)
-            elif self.bz.button2.is_pressed:
-                self.state = "rest_timer"
-                self.start_rest_timer(300)
-            elif self.bz.button3.is_pressed:
-                self.state = "sleeping"
+def start_timer(num):
+    global timer_thread, interrupt_flag
+    remaining_time_queue.put(num)
+    print(f"Starting timer for {num} seconds...")
+    if timer_thread and timer_thread.is_alive():
+        interrupt_flag = True
+        timer_thread.join()
+    interrupt_flag = False
+    timer_thread = threading.Thread(target=timer_function)
+    timer_thread.start()
 
-    def start_focus_timer(self, num):
-        self.remaining_time_queue.put(num)
-        print("Starting focus timer for {} seconds...".format(num))
-        if self.timer_thread and self.timer_thread.is_alive():
-            self.interrupt_flag = True
-            self.timer_thread.join()
-        self.interrupt_flag = False
-        self.timer_thread = threading.Thread(target=self.focus_timer)
-        self.timer_thread.start()
 
-    def start_rest_timer(self, num):
-        self.remaining_time_queue.put(num)
-        print("Starting rest timer for {} seconds...".format(num))
-        if self.timer_thread and self.timer_thread.is_alive():
-            self.interrupt_flag = True
-            self.timer_thread.join()
-        self.interrupt_flag = False
-        self.timer_thread = threading.Thread(target=self.rest_timer)
-        self.timer_thread.start()
+def timer_function():
+    global interrupt_flag
+    remaining_time = remaining_time_queue.get()
+    while remaining_time > 0 and not interrupt_flag:
+        print(f"Remaining time: {remaining_time} seconds")
+        time.sleep(1)
+        remaining_time -= 1
+    print("Timer ended.")
 
-    def focus_timer(self):
-        self.interrupt_flag = False
-        remaining_time = self.remaining_time_queue.get()
-        while remaining_time > 0 and not self.interrupt_flag:
-            print("Remaining time: {} seconds".format(remaining_time))
-            time.sleep(1)
-            remaining_time -= 1
-        print("Focus timer ended.")
 
-    def rest_timer(self):
-        self.interrupt_flag = False
-        remaining_time = self.remaining_time_queue.get()
-        while remaining_time > 0 and not self.interrupt_flag:
-            print("Remaining time: {} seconds".format(remaining_time))
-            time.sleep(1)
-            remaining_time -= 1
-        print("Rest timer ended.")
+def get_remaining_time():
+    if not remaining_time_queue.empty():
+        return remaining_time_queue.queue[-1]
+    return None
 
-    def get_remaining_time(self):
-        if not self.remaining_time_queue.empty():
-            return self.remaining_time_queue.queue[-1]
-        return None
+
+bz = bzLock()
+bz.setup_display()
+bz.setup_numpad()
+
+states = ["sleeping", "focus_timer", "rest_timer", "setting"]
+state = states[0]
+
+remaining_time_queue = queue.Queue()
+timer_thread = None
+interrupt_flag = False
+
+DISPLAY_LOCK = threading.Lock()
+
+update_display_thread = threading.Thread(target=update_display)
+update_display_thread.start()
+threading.Thread(target=switch_states).start()
