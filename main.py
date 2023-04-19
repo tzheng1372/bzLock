@@ -93,13 +93,13 @@ def switch_states():
             countdown_thread = threading.Thread(
                 target=countdown_timer, args=[1500])
             countdown_thread.start()
-            countdown_thread.join()
+            # countdown_thread.join()
         elif bz.button2.is_pressed:
             state = "rest_timer"
             countdown_thread = threading.Thread(
                 target=countdown_timer, args=[300])
             countdown_thread.start()
-            countdown_thread.join()
+            # countdown_thread.join()
         elif bz.button3.is_pressed:
             state = "sleeping"
 
