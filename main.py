@@ -52,10 +52,11 @@ def draw_clock(draw):
 
 
 def update_display():
-    global clock
     mins, secs = (0, 0)
 
     while True:
+        global clock
+
         if clock:
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
