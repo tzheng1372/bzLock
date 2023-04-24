@@ -2,12 +2,15 @@ import datetime
 import math
 import threading
 import time
-import queue
 
+from queue import LifoQueue
 from PIL import ImageFont
 from luma.core.render import canvas
 
 from bz import bzLock
+
+
+stop_timer = threading.Event()
 
 
 def posn(angle, arm_length):
@@ -21,8 +24,10 @@ def draw_clock(draw):
     today_date = now.strftime("%b/%d/%y")
     today_time = now.strftime("%H:%M:%S")
     margin = 4
+
     cx = 30
-    cy = 64 // 2
+    cy = 32
+
     left = cx - cy
     right = cx + cy
 
@@ -47,6 +52,7 @@ def draw_clock(draw):
 
 
 def update_display():
+    mins, secs = (0, 0)
     while True:
         if state == "sleeping":
             with DISPLAY_LOCK:
@@ -55,7 +61,8 @@ def update_display():
         elif state in ["focus_timer", "rest_timer"]:
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
-                    mins, secs = divmod(60, 60)
+                    if not remaining_time_queue.empty():
+                        mins, secs = remaining_time_queue.get()
                     timer = f"{mins:02d}:{secs:02d}"
                     draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
                         "IBMPlexMono-Regular.ttf", size=44))
@@ -64,40 +71,59 @@ def update_display():
 
 def switch_states():
     global state
+    global stop_timer
+
     while True:
         if bz.button1.is_pressed:
             state = "focus_timer"
-            start_timer(1500)
+            print("state = focus_timer")
+            stop_timer.set()
         elif bz.button2.is_pressed:
             state = "rest_timer"
-            start_timer(300)
+            print("state = rest_timer")
+            stop_timer.set()
         elif bz.button3.is_pressed:
             state = "sleeping"
+            print("state = sleeping")
+            stop_timer.set()
         time.sleep(0.1)
 
 
-def start_timer(num):
-    global timer_thread, interrupt_flag
-    if timer_thread and timer_thread.is_alive():
-        interrupt_flag = True
+def timer(seconds):
+    global stop_timer
+    start_time = time.perf_counter()
+    end_time = start_time + seconds
+
+    while time.perf_counter() < end_time and not stop_timer.is_set():
+        remaining_time = end_time - time.perf_counter()
+        mins, secs = divmod(int(remaining_time), 60)
+        timer = '{:02d}:{:02d}'.format(mins, secs)
+        print(timer, end="\r")
+        with REMAINING_TIME_LOCK:
+            remaining_time_queue.put((mins, secs))
+        time.sleep(0.1)
+
+    if not stop_timer.is_set():
+        print("\nTime's up!")
+        return False
+    return True
+
+
+def run_timer(seconds):
+    global stop_timer
+    while True:
+        stop_timer.clear()
+        timer_thread = threading.Thread(target=timer, args=(seconds,))
+
+        timer_thread.start()
+
         timer_thread.join()
 
-    remaining_time_queue.put(num)
-    print(f"Starting timer for {num} seconds...")
-    interrupt_flag = False
-    timer_thread = threading.Thread(target=timer_function)
-    timer_thread.start()
-
-
-def timer_function():
-    global interrupt_flag
-    remaining_time = remaining_time_queue.get()
-    while remaining_time > 0 and not interrupt_flag:
-        print(f"Remaining time: {remaining_time} seconds")
-        time.sleep(1)
-        remaining_time -= 1
-        remaining_time_queue.put(remaining_time)
-    print("Timer ended.")
+        timer_reset = timer(seconds)
+        if timer_reset:
+            print("Resetting timer...")
+        else:
+            break
 
 
 bz = bzLock()
@@ -107,11 +133,19 @@ bz.setup_numpad()
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 
-remaining_time_queue = queue.Queue()
-timer_thread = None
-interrupt_flag = False
-
 DISPLAY_LOCK = threading.Lock()
+REMAINING_TIME_LOCK = threading.Lock()
 
-threading.Thread(target=update_display).start()
-threading.Thread(target=switch_states).start()
+remaining_time_queue = LifoQueue(maxsize=10)
+
+
+run_display_thread = threading.Thread(target=update_display)
+run_switch_thread = threading.Thread(target=switch_states)
+run_timer_thread = threading.Thread(target=run_timer, args=(10,))
+
+
+run_display_thread.start()
+run_switch_thread.start()
+run_timer_thread.start()
+
+run_timer_thread.join()
