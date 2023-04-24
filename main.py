@@ -80,8 +80,8 @@ def switch_states():
 
     while True:
         if bz.button1.is_pressed:
-            clock = True
-            print("clock = True")
+            clock = not clock
+            print("clock = not clock")
         elif bz.button2.is_pressed:
             state = "rest_timer"
             print("state = rest_timer")
@@ -147,7 +147,7 @@ remaining_time_queue = LifoQueue(maxsize=10)
 
 run_display_thread = threading.Thread(target=update_display)
 run_switch_thread = threading.Thread(target=switch_states)
-run_timer_thread = threading.Thread(target=run_timer, args=(10,))
+run_timer_thread = threading.Thread(target=run_timer, args=(100,))
 
 
 run_display_thread.start()
