@@ -136,7 +136,7 @@ bz.setup_numpad()
 
 clock = True
 
-states = ["sleeping", "focus_timer", "rest_timer", "setting"]
+states = ["focus_timer", "rest_timer", "setting"]
 state = states[0]
 
 DISPLAY_LOCK = threading.Lock()
