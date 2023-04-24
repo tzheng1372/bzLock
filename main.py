@@ -52,9 +52,11 @@ def draw_clock(draw):
 
 
 def update_display():
+    global clock
     mins, secs = (0, 0)
+
     while True:
-        if state == "sleeping":
+        if clock:
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
@@ -62,7 +64,9 @@ def update_display():
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     if not remaining_time_queue.empty():
-                        mins, secs = remaining_time_queue.get()
+                        with REMAINING_TIME_LOCK:
+                            mins, secs = remaining_time_queue.get()
+                            remaining_time_queue.put((mins, secs))
                     timer = f"{mins:02d}:{secs:02d}"
                     draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
                         "IBMPlexMono-Regular.ttf", size=44))
@@ -70,14 +74,14 @@ def update_display():
 
 
 def switch_states():
+    global clock
     global state
     global stop_timer
 
     while True:
         if bz.button1.is_pressed:
-            state = "focus_timer"
-            print("state = focus_timer")
-            stop_timer.set()
+            clock = True
+            print("clock = True")
         elif bz.button2.is_pressed:
             state = "rest_timer"
             print("state = rest_timer")
@@ -129,6 +133,8 @@ def run_timer(seconds):
 bz = bzLock()
 bz.setup_display()
 bz.setup_numpad()
+
+clock = True
 
 states = ["sleeping", "focus_timer", "rest_timer", "setting"]
 state = states[0]
