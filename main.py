@@ -61,7 +61,8 @@ def update_display():
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
-        elif state in ["focus_timer", "rest_timer"]:
+        # elif state in ["focus_timer", "rest_timer"]:
+        else:
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     if not remaining_time_queue.empty():
@@ -75,11 +76,11 @@ def update_display():
 
 
 def switch_states():
-    global state
-    global stop_timer
-    global clock
-
     while True:
+        global state
+        global stop_timer
+        global clock
+
         if bz.button1.is_pressed:
             state = "focus_timer"
             print("state = focus_timer")
