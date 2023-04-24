@@ -74,22 +74,22 @@ def update_display():
 
 
 def switch_states():
-    global clock
     global state
     global stop_timer
+    global clock
 
     while True:
         if bz.button1.is_pressed:
-            clock = not clock
-            print("clock = not clock")
+            state = "focus_timer"
+            print("state = focus_timer")
+            stop_timer.set()
         elif bz.button2.is_pressed:
             state = "rest_timer"
             print("state = rest_timer")
             stop_timer.set()
         elif bz.button3.is_pressed:
-            state = "sleeping"
-            print("state = sleeping")
-            stop_timer.set()
+            clock = not clock
+            print("clock = not clock")
         time.sleep(0.1)
 
 
@@ -134,10 +134,9 @@ bz = bzLock()
 bz.setup_display()
 bz.setup_numpad()
 
-clock = True
-
 states = ["focus_timer", "rest_timer", "setting"]
 state = states[0]
+clock = True
 
 DISPLAY_LOCK = threading.Lock()
 REMAINING_TIME_LOCK = threading.Lock()
@@ -147,7 +146,7 @@ remaining_time_queue = LifoQueue(maxsize=10)
 
 run_display_thread = threading.Thread(target=update_display)
 run_switch_thread = threading.Thread(target=switch_states)
-run_timer_thread = threading.Thread(target=run_timer, args=(100,))
+run_timer_thread = threading.Thread(target=run_timer, args=(10,))
 
 
 run_display_thread.start()
