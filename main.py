@@ -92,7 +92,7 @@ def switch_states():
         elif bz.button3.is_pressed:
             clock = not clock
             print("clock = not clock")
-        time.sleep(0.1)
+        time.sleep(0.3)
 
 
 def timer(seconds):
