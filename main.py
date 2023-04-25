@@ -65,8 +65,8 @@ def update_display():
             with DISPLAY_LOCK:
                 with canvas(bz.display) as draw:
                     if not remaining_time_queue.empty():
-                        with REMAINING_TIME_LOCK:
-                            mins, secs = remaining_time_queue.get()
+                        mins, secs = remaining_time_queue.get()
+                        remaining_time_queue.put((mins, secs))
                     timer = f"{mins:02d}:{secs:02d}"
                     draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
                         "IBMPlexMono-Regular.ttf", size=44))
