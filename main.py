@@ -84,19 +84,14 @@ def switch_states():
 
     while True:
         if bz.button1.is_pressed:
-            if not stop_timer.is_set():
-                state = "focus_timer"
+            if not state in ["focus_timer", "rest_timer"]:
                 run_timer(1500)
 
         elif bz.button2.is_pressed:
-            if not stop_timer.is_set():
-                state = "rest_timer"
+            if not state in ["focus_timer", "rest_timer"]:
                 run_timer(300)
 
         elif bz.button3.is_pressed:
-            stop_timer.is_set()
-            with remaining_time_queue.mutex:
-                remaining_time_queue.queue.clear()
             state = "clock"
 
         time.sleep(0.3)
@@ -132,7 +127,7 @@ bz = bzLock()
 bz.setup_display()
 bz.setup_numpad()
 
-states = ["welcome", "clock", "focus_timer", "rest_timer", "setting"]
+states = ["welcome", "clock", "focus_timer", "rest_timer"]
 state = states[0]
 
 stop_timer = Event()
