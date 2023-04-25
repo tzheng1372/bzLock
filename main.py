@@ -1,6 +1,6 @@
 import datetime
 import math
-import threading
+from threading import Event, Lock, Thread
 import time
 
 from queue import LifoQueue
@@ -8,9 +8,6 @@ from PIL import ImageFont
 from luma.core.render import canvas
 
 from bz import bzLock
-
-
-stop_timer = threading.Event()
 
 
 def posn(angle, arm_length):
@@ -53,20 +50,28 @@ def draw_clock(draw):
 
 def update_display():
     mins, secs = (0, 0)
-    global clock
 
     while True:
-        if clock:
-            with DISPLAY_LOCK:
+        if state == "welcome":
+            with display_lock:
+                with canvas(bz.display) as draw:
+                    text = "Press blue to show clock"
+                    draw.text((0, 0), text, fill="white")
+                    text = "Press red to run focus timer"
+                    draw.text((0, 0), text, fill="white")
+                    text = "Press green to run reset timer"
+                    draw.text((0, 0), text, fill="white")
+
+        elif state == "clock":
+            with display_lock:
                 with canvas(bz.display) as draw:
                     draw_clock(draw)
-        # elif state in ["focus_timer", "rest_timer"]:
+
         else:
-            with DISPLAY_LOCK:
+            with display_lock:
                 with canvas(bz.display) as draw:
                     if not remaining_time_queue.empty():
                         mins, secs = remaining_time_queue.get()
-                        remaining_time_queue.put((mins, secs))
                     timer = f"{mins:02d}:{secs:02d}"
                     draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
                         "IBMPlexMono-Regular.ttf", size=44))
@@ -81,15 +86,15 @@ def switch_states():
 
         if bz.button1.is_pressed:
             state = "focus_timer"
-            print("state = focus_timer")
-            stop_timer.set()
+            run_timer(1500)
+
         elif bz.button2.is_pressed:
             state = "rest_timer"
-            print("state = rest_timer")
-            stop_timer.set()
+            run_timer(300)
+
         elif bz.button3.is_pressed:
-            clock = not clock
-            print("clock = not clock")
+            state = "clock"
+
         time.sleep(0.3)
 
 
@@ -103,54 +108,40 @@ def timer(seconds):
         mins, secs = divmod(int(remaining_time), 60)
         timer = '{:02d}:{:02d}'.format(mins, secs)
         print(timer, end="\r")
-        with REMAINING_TIME_LOCK:
+        with remaining_time_lock:
             remaining_time_queue.put((mins, secs))
         time.sleep(0.1)
 
     if not stop_timer.is_set():
         print("\nTime's up!")
-        return False
-    return True
 
 
 def run_timer(seconds):
     global stop_timer
-    while True:
-        stop_timer.clear()
-        timer_thread = threading.Thread(target=timer, args=(seconds,))
 
-        timer_thread.start()
-
-        timer_thread.join()
-
-        timer_reset = timer(seconds)
-        if timer_reset:
-            print("Resetting timer...")
-        else:
-            break
+    stop_timer.is_set()
+    stop_timer.clear()
+    timer_thread = Thread(target=timer, args=(seconds,))
+    timer_thread.start()
 
 
 bz = bzLock()
 bz.setup_display()
 bz.setup_numpad()
 
-states = ["focus_timer", "rest_timer", "setting"]
+states = ["welcome", "clock", "focus_timer", "rest_timer", "setting"]
 state = states[0]
 clock = True
 
-DISPLAY_LOCK = threading.Lock()
-REMAINING_TIME_LOCK = threading.Lock()
+stop_timer = Event()
+
+display_lock = Lock()
+remaining_time_lock = Lock()
 
 remaining_time_queue = LifoQueue(maxsize=10)
 
+update_display_thread = Thread(target=update_display)
+switch_states_thread = Thread(target=switch_states)
 
-run_display_thread = threading.Thread(target=update_display)
-run_switch_thread = threading.Thread(target=switch_states)
-run_timer_thread = threading.Thread(target=run_timer, args=(10,))
-
-
-run_display_thread.start()
-run_switch_thread.start()
-run_timer_thread.start()
-
-run_timer_thread.join()
+update_display_thread.start()
+switch_states_thread.start()
