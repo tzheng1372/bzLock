@@ -58,9 +58,9 @@ def update_display():
                     text = "Press blue to show clock"
                     draw.text((0, 0), text, fill="white")
                     text = "Press red to run focus timer"
-                    draw.text((0, 0), text, fill="white")
+                    draw.text((0, 10), text, fill="white")
                     text = "Press green to run reset timer"
-                    draw.text((0, 0), text, fill="white")
+                    draw.text((0, 20), text, fill="white")
 
         elif state == "clock":
             with display_lock:
