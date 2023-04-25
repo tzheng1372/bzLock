@@ -79,20 +79,22 @@ def update_display():
 
 
 def switch_states():
-    while True:
-        global state
-        global stop_timer
-        global clock
+    global state
+    global stop_timer
 
+    while True:
         if bz.button1.is_pressed:
             state = "focus_timer"
+            stop_timer.is_set()
             run_timer(1500)
 
         elif bz.button2.is_pressed:
             state = "rest_timer"
+            stop_timer.is_set()
             run_timer(300)
 
         elif bz.button3.is_pressed:
+            stop_timer.is_set()
             state = "clock"
 
         time.sleep(0.3)
@@ -119,7 +121,6 @@ def timer(seconds):
 def run_timer(seconds):
     global stop_timer
 
-    stop_timer.is_set()
     stop_timer.clear()
     timer_thread = Thread(target=timer, args=(seconds,))
     timer_thread.start()
@@ -131,7 +132,6 @@ bz.setup_numpad()
 
 states = ["welcome", "clock", "focus_timer", "rest_timer", "setting"]
 state = states[0]
-clock = True
 
 stop_timer = Event()
 
