@@ -95,6 +95,8 @@ def switch_states():
 
         elif bz.button3.is_pressed:
             stop_timer.is_set()
+            with remaining_time_queue.mutex:
+                remaining_time_queue.queue.clear()
             state = "clock"
 
         time.sleep(0.3)
