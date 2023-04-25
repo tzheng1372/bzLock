@@ -84,14 +84,14 @@ def switch_states():
 
     while True:
         if bz.button1.is_pressed:
-            state = "focus_timer"
-            stop_timer.is_set()
-            run_timer(1500)
+            if not stop_timer.is_set():
+                state = "focus_timer"
+                run_timer(1500)
 
         elif bz.button2.is_pressed:
-            state = "rest_timer"
-            stop_timer.is_set()
-            run_timer(300)
+            if not stop_timer.is_set():
+                state = "rest_timer"
+                run_timer(300)
 
         elif bz.button3.is_pressed:
             stop_timer.is_set()
