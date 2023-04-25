@@ -55,11 +55,11 @@ def update_display():
         if state == "welcome":
             with display_lock:
                 with canvas(bz.display) as draw:
-                    text = "Press blue to show clock"
+                    text = "Blue for clock"
                     draw.text((0, 0), text, fill="white")
-                    text = "Press red to run focus timer"
+                    text = "Red for focus timer"
                     draw.text((0, 10), text, fill="white")
-                    text = "Press green to run reset timer"
+                    text = "Green for reset timer"
                     draw.text((0, 20), text, fill="white")
 
         elif state == "clock":
