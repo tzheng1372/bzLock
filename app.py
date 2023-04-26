@@ -61,7 +61,9 @@ def reset_timer():
 @app.route('/unlock')
 def unlock():
     #unlock box
-    return
+    return redirect('/start_stop_timer')
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
