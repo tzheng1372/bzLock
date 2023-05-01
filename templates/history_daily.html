@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="../assets/css/countdown-timer-styles.css">
     <link rel="stylesheet" href="../assets/css/countdown-timer.css">
+    <script src="../assets/js/chart.min.js"></script>
 </head>
 
 <body class="text-start">
@@ -45,7 +46,19 @@
                     <div class="d-block">
                         <canvas id="my_chart"></canvas>
                         <script>
-                            
+                            var ctx = document.getElementById('my_chart').getContext("2d");
+                            var barChart = new Chart(ctx, {
+                                type: "bar",
+                                data: {
+                                    labels : {{ labels | safe }},
+                                    datasets: [
+                                        {
+                                            label : "data",
+                                            data: {{ values | safe }}
+                                        }
+                                    ]
+                                },
+                            });
                         </script>
                     </div>
                 </div>
@@ -60,7 +73,6 @@
         </div>
     </div>
     <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
-    <script src="../assets/js/chart.min.js"></script>
     <script src="../assets/js/bs-init.js"></script>
     <script src="../assets/js/countdown-timer-countdown.js"></script>
 </body>
