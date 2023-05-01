@@ -130,31 +130,30 @@ def draw_clock(draw):
 bz = bzLock()
 bz.setup_display()
 bz.setup_numpad()
-
-# states = ["welcome", "clock", "focus_timer", "rest_timer"]
-# state = states[0]
-
-# stop_timer = Event()
+bz.setup_spi()
 
 display_lock = Lock()
-# remaining_time_lock = Lock()
 
-# remaining_time_queue = LifoQueue(maxsize=10)
-
-# update_display_thread = Thread(target=update_display)
-# switch_states_thread = Thread(target=switch_states)
-
-# update_display_thread.start()
-# switch_states_thread.start()
+# Enum for menu states
 
 
 class MenuState(Enum):
     MAIN = 1
     SET_TIMER_SUBMENU = 2
     START_TIMER_SUBMENU = 3
+    RUNNING_TIMER = 4
 
 
 menu_state = MenuState.MAIN
+
+# Timer lengths
+focus_timer_length = 25 * 60
+rest_timer_length = 5 * 60
+
+# Timer tracking variables
+current_timer = None
+timer_start_time = None
+timer_paused = False
 
 
 def show_menu():
@@ -175,16 +174,36 @@ def show_start_timer_submenu():
         bz.text_to_display(text)
 
 
+def show_timer_remaining(time_remaining):
+    with display_lock:
+        text = f"Time remaining:\r\n{time_remaining // 60:02}:{time_remaining % 60:02}"
+
+
 try:
     while True:
         if menu_state == MenuState.MAIN:
             show_menu()
+            current_timer = None
 
         elif menu_state == MenuState.SET_TIMER_SUBMENU:
             show_set_timer_submenu()
 
         elif menu_state == MenuState.START_TIMER_SUBMENU:
             show_start_timer_submenu()
+
+        elif menu_state == MenuState.RUNNING_TIMER:
+            if current_timer is not None and not timer_paused:
+                time_elapsed = time.time() - timer_start_time
+                time_remaining = int(current_timer - time_elapsed)
+
+                if time_remaining <= 0:
+                    print("Timer finished")
+                    # Add your code to unlock the box here
+                    menu_state = MenuState.MAIN
+                else:
+                    show_timer_remaining(time_remaining)
+            else:
+                time.sleep(0.1)
 
         time.sleep(0.1)
 
@@ -197,9 +216,19 @@ try:
                 # Add your code for setting the focus timer length here
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
-                print("Blue button pressed - Start focus timer")
-                # Add your code for starting the focus timer here
-                menu_state = MenuState.MAIN
+                # todo: add detect phone in box and box closed
+                current_timer = focus_timer_length
+                timer_start_time = time.time()
+                timer_paused = False
+                menu_state = MenuState.RUNNING_TIMER
+            elif menu_state == MenuState.RUNNING_TIMER:
+                if timer_paused:
+                    print("Resume timer")
+                    timer_start_time = time.time() - (current_timer - time_remaining)
+                    timer_paused = False
+                else:
+                    print("Pause timer")
+                    timer_paused = True
 
         if bz.green_button.is_pressed:  # type: ignore
             time.sleep(0.5)  # Debounce
@@ -210,8 +239,25 @@ try:
                 # Add your code for setting the rest timer length here
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
-                print("Green button pressed - Start rest timer")
-                # Add your code for starting the rest timer here
+                # todo: add detect phone in box and box closed
+                current_timer = rest_timer_length
+                timer_start_time = time.time()
+                timer_paused = False
+                menu_state = MenuState.RUNNING_TIMER
+            elif menu_state == MenuState.RUNNING_TIMER:
+                if timer_paused:
+                    print("Resume timer")
+                    timer_start_time = time.time() - (current_timer - time_remaining)
+                    timer_paused = False
+                else:
+                    print("Pause timer")
+                    timer_paused = True
+
+        if bz.red_button.is_pressed:  # type: ignore
+            time.sleep(0.5)  # Debounce
+            if menu_state == MenuState.RUNNING_TIMER:
+                print("Stop timer and unlock box")
+                # Add your code to unlock the box here
                 menu_state = MenuState.MAIN
 
 except KeyboardInterrupt:
