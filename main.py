@@ -159,19 +159,19 @@ menu_state = MenuState.MAIN
 
 def show_menu():
     with display_lock:
-        text = "Set timer length: Press BLUE\r\n Start timer: Press GREEN"
+        text = "Set timer length:\r\n\tPress BLUE\r\nStart timer:\r\n\tPress GREEN"
         bz.text_to_display(text)
 
 
 def show_set_timer_submenu():
     with display_lock:
-        text = "Set Focus Timer: Press BLUE\r\n Set Rest Timer: Press GREEN"
+        text = "Set Focus Timer:\r\n\tPress BLUE\r\nSet Rest Timer:\r\n\tPress GREEN"
         bz.text_to_display(text)
 
 
 def show_start_timer_submenu():
     with display_lock:
-        text = "Start Focus Timer: Press BLUE\r\n Start Rest Timer: Press GREEN"
+        text = "Start Focus Timer:\r\n\tPress BLUE\r\nStart Rest Timer:\r\n\tPress GREEN"
         bz.text_to_display(text)
 
 
