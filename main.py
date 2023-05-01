@@ -177,6 +177,7 @@ def show_start_timer_submenu():
 def show_timer_remaining(time_remaining):
     with display_lock:
         text = f"Time remaining:\r\n{time_remaining // 60:02}:{time_remaining % 60:02}"
+        bz.text_to_display(text)
 
 
 try:
