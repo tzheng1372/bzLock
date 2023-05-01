@@ -77,9 +77,9 @@ class bzLock:
         self.display = None
         self.numpad = None
         self.spi = None
-        self.button1 = Button(17)
-        self.button2 = Button(27)
-        self.button3 = Button(22)
+        self.blue_button = Button(17)
+        self.green_button = Button(27)
+        self.red_button = Button(22)
 
     def setup_display(self):
         try:
@@ -93,15 +93,13 @@ class bzLock:
 
     def clear_display(self):
         if self.display:
-            with canvas(self.display) as draw:
-                draw.rectangle(self.display.bounding_box, fill="black")
+            self.display.clear()
         else:
             print("Display has not been set up")
 
     def text_to_display(self, text, xy=(0, 0), font=None):
         if self.display:
             with canvas(self.display) as draw:
-                self.clear_display()
                 draw.text(xy, text, fill="white", font=font)
         else:
             print("Display has not been set up")

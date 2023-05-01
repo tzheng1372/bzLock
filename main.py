@@ -6,6 +6,8 @@ import time
 from queue import LifoQueue
 from PIL import ImageFont
 from luma.core.render import canvas
+from enum import Enum
+
 
 from bz import bzLock
 
@@ -48,99 +50,169 @@ def draw_clock(draw):
     draw.text((2 * (cx + margin), cy), today_time, fill="yellow")
 
 
-def update_display():
-    mins, secs = (0, 0)
+# def update_display():
+#     mins, secs = (0, 0)
 
-    while True:
-        if state == "welcome":
-            with display_lock:
-                with canvas(bz.display) as draw:
-                    text = "Blue for clock"
-                    draw.text((0, 0), text, fill="white")
-                    text = "Red for focus timer"
-                    draw.text((0, 10), text, fill="white")
-                    text = "Green for reset timer"
-                    draw.text((0, 20), text, fill="white")
+#     while True:
+#         if state == "welcome":
+#             with display_lock:
+#                 with canvas(bz.display) as draw:
+#                     text = "Blue for clock"
+#                     draw.text((0, 0), text, fill="white")
+#                     text = "Red for focus timer"
+#                     draw.text((0, 10), text, fill="white")
+#                     text = "Green for reset timer"
+#                     draw.text((0, 20), text, fill="white")
 
-        elif state == "clock":
-            with display_lock:
-                with canvas(bz.display) as draw:
-                    draw_clock(draw)
+#         elif state == "clock":
+#             with display_lock:
+#                 with canvas(bz.display) as draw:
+#                     draw_clock(draw)
 
-        else:
-            with display_lock:
-                with canvas(bz.display) as draw:
-                    if not remaining_time_queue.empty():
-                        mins, secs = remaining_time_queue.get()
-                    timer = f"{mins:02d}:{secs:02d}"
-                    draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
-                        "IBMPlexMono-Regular.ttf", size=44))
-        time.sleep(0.1)
-
-
-def switch_states():
-    global state
-    global stop_timer
-
-    while True:
-        if bz.button1.is_pressed:
-            if not state in ["focus_timer", "rest_timer"]:
-                state = "focus_timer"
-                run_timer(1500)
-
-        elif bz.button2.is_pressed:
-            if not state in ["focus_timer", "rest_timer"]:
-                state = "rest_timer"
-                run_timer(300)
-
-        elif bz.button3.is_pressed:
-            state = "clock"
-
-        time.sleep(0.3)
+#         else:
+#             with display_lock:
+#                 with canvas(bz.display) as draw:
+#                     if not remaining_time_queue.empty():
+#                         mins, secs = remaining_time_queue.get()
+#                     timer = f"{mins:02d}:{secs:02d}"
+#                     draw.text((0, 0), timer, fill="white", font=ImageFont.truetype(
+#                         "IBMPlexMono-Regular.ttf", size=44))
+#         time.sleep(0.1)
 
 
-def timer(seconds):
-    global stop_timer
-    start_time = time.perf_counter()
-    end_time = start_time + seconds
+# def switch_states():
+#     global state
+#     global stop_timer
 
-    while time.perf_counter() < end_time and not stop_timer.is_set():
-        remaining_time = end_time - time.perf_counter()
-        mins, secs = divmod(int(remaining_time), 60)
-        timer = '{:02d}:{:02d}'.format(mins, secs)
-        print(timer, end="\r")
-        with remaining_time_lock:
-            remaining_time_queue.put((mins, secs))
-        time.sleep(0.1)
+#     while True:
+#         if bz.button1.is_pressed:
+#             if not state in ["focus_timer", "rest_timer"]:
+#                 state = "focus_timer"
+#                 run_timer(1500)
 
-    if not stop_timer.is_set():
-        print("\nTime's up!")
+#         elif bz.button2.is_pressed:
+#             if not state in ["focus_timer", "rest_timer"]:
+#                 state = "rest_timer"
+#                 run_timer(300)
+
+#         elif bz.button3.is_pressed:
+#             state = "clock"
+
+#         time.sleep(0.3)
 
 
-def run_timer(seconds):
-    global stop_timer
+# def timer(seconds):
+#     global stop_timer
+#     start_time = time.perf_counter()
+#     end_time = start_time + seconds
 
-    stop_timer.clear()
-    timer_thread = Thread(target=timer, args=(seconds,))
-    timer_thread.start()
+#     while time.perf_counter() < end_time and not stop_timer.is_set():
+#         remaining_time = end_time - time.perf_counter()
+#         mins, secs = divmod(int(remaining_time), 60)
+#         timer = '{:02d}:{:02d}'.format(mins, secs)
+#         print(timer, end="\r")
+#         with remaining_time_lock:
+#             remaining_time_queue.put((mins, secs))
+#         time.sleep(0.1)
+
+#     if not stop_timer.is_set():
+#         print("\nTime's up!")
+
+
+# def run_timer(seconds):
+#     global stop_timer
+
+#     stop_timer.clear()
+#     timer_thread = Thread(target=timer, args=(seconds,))
+#     timer_thread.start()
 
 
 bz = bzLock()
 bz.setup_display()
 bz.setup_numpad()
 
-states = ["welcome", "clock", "focus_timer", "rest_timer"]
-state = states[0]
+# states = ["welcome", "clock", "focus_timer", "rest_timer"]
+# state = states[0]
 
-stop_timer = Event()
+# stop_timer = Event()
 
 display_lock = Lock()
-remaining_time_lock = Lock()
+# remaining_time_lock = Lock()
 
-remaining_time_queue = LifoQueue(maxsize=10)
+# remaining_time_queue = LifoQueue(maxsize=10)
 
-update_display_thread = Thread(target=update_display)
-switch_states_thread = Thread(target=switch_states)
+# update_display_thread = Thread(target=update_display)
+# switch_states_thread = Thread(target=switch_states)
 
-update_display_thread.start()
-switch_states_thread.start()
+# update_display_thread.start()
+# switch_states_thread.start()
+
+
+class MenuState(Enum):
+    MAIN = 1
+    SET_TIMER_SUBMENU = 2
+    START_TIMER_SUBMENU = 3
+
+
+menu_state = MenuState.MAIN
+
+
+def show_menu():
+    with display_lock:
+        text = "Set timer length: Press BLUE\r\n Start timer: Press GREEN"
+        bz.text_to_display(text)
+
+
+def show_set_timer_submenu():
+    with display_lock:
+        text = "Set Focus Timer: Press BLUE\r\n Set Rest Timer: Press GREEN"
+        bz.text_to_display(text)
+
+
+def show_start_timer_submenu():
+    with display_lock:
+        text = "Start Focus Timer: Press BLUE\r\n Start Rest Timer: Press GREEN"
+        bz.text_to_display(text)
+
+
+try:
+    while True:
+        if menu_state == MenuState.MAIN:
+            show_menu()
+
+        elif menu_state == MenuState.SET_TIMER_SUBMENU:
+            show_set_timer_submenu()
+
+        elif menu_state == MenuState.START_TIMER_SUBMENU:
+            show_start_timer_submenu()
+
+        time.sleep(0.1)
+
+        if bz.blue_button.is_pressed:  # type: ignore
+            time.sleep(0.5)  # Debounce
+            if menu_state == MenuState.MAIN:
+                menu_state = MenuState.SET_TIMER_SUBMENU
+            elif menu_state == MenuState.SET_TIMER_SUBMENU:
+                print("Blue button pressed - Set focus timer length")
+                # Add your code for setting the focus timer length here
+                menu_state = MenuState.MAIN
+            elif menu_state == MenuState.START_TIMER_SUBMENU:
+                print("Blue button pressed - Start focus timer")
+                # Add your code for starting the focus timer here
+                menu_state = MenuState.MAIN
+
+        if bz.green_button.is_pressed:  # type: ignore
+            time.sleep(0.5)  # Debounce
+            if menu_state == MenuState.MAIN:
+                menu_state = MenuState.START_TIMER_SUBMENU
+            elif menu_state == MenuState.SET_TIMER_SUBMENU:
+                print("Green button pressed - Set rest timer length")
+                # Add your code for setting the rest timer length here
+                menu_state = MenuState.MAIN
+            elif menu_state == MenuState.START_TIMER_SUBMENU:
+                print("Green button pressed - Start rest timer")
+                # Add your code for starting the rest timer here
+                menu_state = MenuState.MAIN
+
+except KeyboardInterrupt:
+    pass
