@@ -183,19 +183,19 @@ def get_numpad_input(max_digits):
 
 def show_menu():
     with display_lock:
-        text = "Set timer length:\r\n\tPress BLUE\r\nStart timer:\r\n\tPress GREEN"
+        text = "Set timer length:\r\n    Press BLUE\r\nStart timer:\r\n    Press GREEN"
         bz.text_to_display(text)
 
 
 def show_set_timer_submenu():
     with display_lock:
-        text = "Set Focus Timer:\r\n\tPress BLUE\r\nSet Rest Timer:\r\n\tPress GREEN"
+        text = "Set Focus Timer:\r\n    Press BLUE\r\nSet Rest Timer:\r\n    Press GREEN"
         bz.text_to_display(text)
 
 
 def show_start_timer_submenu():
     with display_lock:
-        text = "Start Focus Timer:\r\n\tPress BLUE\r\nStart Rest Timer:\r\n\tPress GREEN"
+        text = "Start Focus Timer:\r\n    Press BLUE\r\nStart Rest Timer:\r\n    Press GREEN"
         bz.text_to_display(text)
 
 
@@ -207,7 +207,7 @@ def show_timer_remaining(time_remaining):
 
 def show_numpad_input(input_value):
     with display_lock:
-        text = f"Input: {input_value}\r\nPress GREEN to confirm"
+        text = f"Input: {input_value} min\r\nConfirm:    Press GREEN"
         bz.text_to_display(text)
 
 
