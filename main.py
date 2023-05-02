@@ -208,7 +208,10 @@ def get_numpad_input(max_digits):
             break
 
         time.sleep(0.1)
-    return int(input_value)
+    try:
+        return int(input_value)
+    except:
+        pass
 
 
 try:
