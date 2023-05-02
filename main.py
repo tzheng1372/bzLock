@@ -173,8 +173,12 @@ def get_numpad_input(max_digits):
             if len(input_value) >= max_digits:
                 break
 
+        # Break the loop if the green button is pressed
+        if bz.green_button.is_pressed:
+            break
+
         time.sleep(0.1)
-    return input_value
+    return int(input_value)
 
 
 def show_menu():
@@ -240,7 +244,7 @@ try:
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.SET_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
-                focus_timer_length = int(get_numpad_input(4)) * 60
+                focus_timer_length = get_numpad_input(4) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
@@ -262,7 +266,7 @@ try:
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.START_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
-                rest_timer_length = int(get_numpad_input(4)) * 60
+                rest_timer_length = get_numpad_input(4) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
