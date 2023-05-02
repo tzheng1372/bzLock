@@ -187,7 +187,7 @@ def show_numpad_input(input_value):
 
 
 # Function for getting numpad input
-def get_numpad_input(max_digits):
+def get_numpad_input(max_digits, default):
     input_value = ""
     while True:
         key = bz.read_numpad()
@@ -211,7 +211,7 @@ def get_numpad_input(max_digits):
     try:
         return int(input_value)
     except:
-        pass
+        return default
 
 
 try:
@@ -248,7 +248,7 @@ try:
                 menu_state = MenuState.SET_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
                 show_numpad_input("")
-                focus_timer_length = get_numpad_input(4) * 60
+                focus_timer_length = get_numpad_input(4, 25) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
@@ -271,7 +271,7 @@ try:
                 menu_state = MenuState.START_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
                 show_numpad_input("")
-                rest_timer_length = get_numpad_input(4) * 60
+                rest_timer_length = get_numpad_input(4, 5) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
