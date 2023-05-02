@@ -156,6 +156,27 @@ timer_start_time = None
 timer_paused = False
 
 
+# Function for getting numpad input
+def get_numpad_input(max_digits):
+    input_value = ""
+    while True:
+        key = bz.read_numpad()
+        if key:
+            if key == "*" or key == "#":
+                continue
+            elif key == "0" and len(input_value) == 0:
+                continue
+            input_value += key
+            print(input_value)
+            show_numpad_input(input_value)
+
+            if len(input_value) >= max_digits:
+                break
+
+        time.sleep(0.1)
+    return input_value
+
+
 def show_menu():
     with display_lock:
         text = "Set timer length:\r\n\tPress BLUE\r\nStart timer:\r\n\tPress GREEN"
@@ -180,6 +201,12 @@ def show_timer_remaining(time_remaining):
         bz.text_to_display(text)
 
 
+def show_numpad_input(input_value):
+    with display_lock:
+        text = f"Input: {input_value}\r\nPress GREEN to confirm"
+        bz.text_to_display(text)
+
+
 try:
     while True:
         if menu_state == MenuState.MAIN:
@@ -194,7 +221,7 @@ try:
 
         elif menu_state == MenuState.RUNNING_TIMER:
             if current_timer is not None and not timer_paused:
-                time_elapsed = time.time() - timer_start_time
+                time_elapsed = time.time() - timer_start_time  # type: ignore
                 time_remaining = int(current_timer - time_elapsed)
 
                 if time_remaining <= 0:
@@ -213,8 +240,7 @@ try:
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.SET_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
-                print("Blue button pressed - Set focus timer length")
-                # Add your code for setting the focus timer length here
+                focus_timer_length = int(get_numpad_input(4)) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
@@ -225,7 +251,7 @@ try:
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
-                    timer_start_time = time.time() - (current_timer - time_remaining)
+                    timer_start_time = time.time() - (current_timer - time_remaining)  # type: ignore
                     timer_paused = False
                 else:
                     print("Pause timer")
@@ -236,8 +262,7 @@ try:
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.START_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
-                print("Green button pressed - Set rest timer length")
-                # Add your code for setting the rest timer length here
+                rest_timer_length = int(get_numpad_input(4)) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
@@ -248,7 +273,7 @@ try:
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
-                    timer_start_time = time.time() - (current_timer - time_remaining)
+                    timer_start_time = time.time() - (current_timer - time_remaining)  # type: ignore
                     timer_paused = False
                 else:
                     print("Pause timer")
@@ -262,4 +287,4 @@ try:
                 menu_state = MenuState.MAIN
 
 except KeyboardInterrupt:
-    pass
+    bz.clear_display()
