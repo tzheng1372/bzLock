@@ -115,11 +115,12 @@ class bzLock:
 
     def read_numpad(self):
         if self.numpad:
-            while True:
-                keys = self.numpad.pressed_keys
-                if keys:
-                    time.sleep(0.3)
-                    return keys[0]
+            keys = self.numpad.pressed_keys
+            if keys:
+                time.sleep(0.5)  # Debounce
+                return keys[0]
+            else:
+                return None
         else:
             print("Numpad has not been set up")
 

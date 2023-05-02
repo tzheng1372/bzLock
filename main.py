@@ -174,7 +174,7 @@ def get_numpad_input(max_digits):
                 break
 
         # Break the loop if the green button is pressed
-        if bz.green_button.is_pressed:
+        if bz.green_button.is_pressed:  # type: ignore
             break
 
         time.sleep(0.1)
