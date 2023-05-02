@@ -156,31 +156,6 @@ timer_start_time = None
 timer_paused = False
 
 
-# Function for getting numpad input
-def get_numpad_input(max_digits):
-    input_value = ""
-    while True:
-        key = bz.read_numpad()
-        if key:
-            if key == "*" or key == "#":
-                continue
-            elif key == "0" and len(input_value) == 0:
-                continue
-            input_value += key
-            print(input_value)
-            show_numpad_input(input_value)
-
-            if len(input_value) >= max_digits:
-                break
-
-        # Break the loop if the green button is pressed
-        if bz.green_button.is_pressed:  # type: ignore
-            break
-
-        time.sleep(0.1)
-    return int(input_value)
-
-
 def show_menu():
     with display_lock:
         text = "Set timer length:\r\n    Press BLUE\r\nStart timer:\r\n    Press GREEN"
@@ -207,8 +182,33 @@ def show_timer_remaining(time_remaining):
 
 def show_numpad_input(input_value):
     with display_lock:
-        text = f"Input: {input_value} min\r\nConfirm:    Press GREEN"
+        text = f"Input: {input_value} min\r\nConfirm:\r\n    Press GREEN"
         bz.text_to_display(text)
+
+
+# Function for getting numpad input
+def get_numpad_input(max_digits):
+    input_value = ""
+    while True:
+        key = bz.read_numpad()
+        if key:
+            if key == "*" or key == "#":
+                continue
+            elif key == "0" and len(input_value) == 0:
+                continue
+            input_value += key
+            print(input_value)
+            show_numpad_input(input_value)
+
+            if len(input_value) >= max_digits:
+                break
+
+        # Break the loop if the green button is pressed
+        if bz.green_button.is_pressed:  # type: ignore
+            break
+
+        time.sleep(0.1)
+    return int(input_value)
 
 
 try:
@@ -244,6 +244,7 @@ try:
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.SET_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
+                show_numpad_input("")
                 focus_timer_length = get_numpad_input(4) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
@@ -266,6 +267,7 @@ try:
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.START_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
+                show_numpad_input("")
                 rest_timer_length = get_numpad_input(4) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
