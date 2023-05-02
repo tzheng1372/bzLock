@@ -209,6 +209,7 @@ def show_numpad_input(input_value):
     with display_lock:
         text = f"Input: {input_value}\r\nPress GREEN to confirm"
         bz.text_to_display(text)
+    print("out")
 
 
 try:
