@@ -16,9 +16,12 @@ sleep(1)
 bz.clear_display()
 sleep(1)
 
+
 while True:
     key = bz.read_numpad()
     if key:
         print(key)
+
+    print(bz.detect_phone())
 
     sleep(0.1)
