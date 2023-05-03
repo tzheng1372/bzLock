@@ -108,7 +108,7 @@ try:
 
         elif menu_state == MenuState.RUNNING_TIMER:
             if current_timer is not None and not timer_paused:
-                time_elapsed = time.time() - timer_start_time  # type: ignore
+                time_elapsed = time() - timer_start_time  # type: ignore
                 time_remaining = int(current_timer - time_elapsed)
 
                 if time_remaining <= 0:
@@ -133,14 +133,14 @@ try:
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
                 current_timer = focus_timer_length
-                timer_start_time = time.time()
+                timer_start_time = time()
                 timer_paused = False
                 bz.lock()
                 menu_state = MenuState.RUNNING_TIMER
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
-                    timer_start_time = time.time() - (current_timer - time_remaining)  # type: ignore
+                    timer_start_time = time() - (current_timer - time_remaining)  # type: ignore
                     timer_paused = False
                 else:
                     print("Pause timer")
@@ -157,13 +157,13 @@ try:
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
                 current_timer = rest_timer_length
-                timer_start_time = time.time()
+                timer_start_time = time()
                 timer_paused = False
                 menu_state = MenuState.RUNNING_TIMER
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
-                    timer_start_time = time.time() - (current_timer - time_remaining)  # type: ignore
+                    timer_start_time = time() - (current_timer - time_remaining)  # type: ignore
                     timer_paused = False
                 else:
                     print("Pause timer")
