@@ -89,14 +89,17 @@ def award():
     gold = False
     silver = False
     bronze = False
-    with open("data.csv", 'r') as file:
-        last_line = file.readlines()[-1].strip().split(",")
-        streak = int(last_line[3])
-    if streak >= 1000:
+    longest_streak = 0
+    with open('data.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if row[3] > longest_streak:
+                longest_streak = row[3]
+    if longest_streak >= 1000:
         gold, silver, bronze  = True
-    elif streak >= 100:
+    elif longest_streak >= 100:
         silver, bronze = True
-    elif streak >= 10:
+    elif longest_streak >= 10:
         bronze = True
     return gold, silver, bronze
 
