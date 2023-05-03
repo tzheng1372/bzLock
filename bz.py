@@ -1,75 +1,13 @@
 import board
 import digitalio
-import pigpio
 import time
-import RPi.GPIO as GPIO
 import spidev
-
-
 import adafruit_matrixkeypad
 from hx711 import HX711
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
-from gpiozero import Button
-
-
-# Initialize FSR
-ADC_Start = 0b00000001
-ADC_CH0 = 0b10000000
-# FSR_pin = 23
-# spi = spidev.SpiDev()
-# spi.open(0, 0)
-# spi.mode = 0b01
-# spi.max_speed_hz = 1200000
-
-# Initialize LC
-# hx = HX711(dout_pin=17, pd_sck_pin=27)
-
-
-# def callback_fn(FSR_pin):
-#     return True
-
-
-# def fsr_detect_phone():
-#     GPIO.setmode(GPIO.BCM)
-#     GPIO.setup(FSR_pin, GPIO.IN)
-#     GPIO.add_event_detect(FSR_pin, GPIO.RISING, callback=callback_fn)
-
-
-# def fsr_adc_detect_phone():
-#     readBytes = spi.xfer2([ADC_Start, ADC_CH0, 0x00])
-#     digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
-#     print(format(readBytes[2], '#010b'), format(
-#         readBytes[1], '#010b'), format(readBytes[0], '#010b'))
-#     print(digitalValue)
-#     if digitalValue > 2:
-#         return True
-#     return False
-
-# hx = HX711(dout_pin=5, pd_sck_pin=6)
-
-# def load_cell_setup():
-#     hx.power_up()
-#     hx.reset()
-#     hx.zero()
-
-
-# def load_cell_get_weight():
-#     weight = hx.get_weight_mean(10)
-#     print(weight)
-#     return weight
-
-
-# def load_cell_detect_phone():
-#     weight = hx.get_weight_mean(10)
-#     if weight > -10000:
-#         return True
-#     return False
-
-
-# def load_cell_shut_down():
-#     hx.power_down()
+from gpiozero import Button, Servo
 
 
 class bzLock:
@@ -77,9 +15,10 @@ class bzLock:
         self.display = None
         self.numpad = None
         self.spi = None
-        self.button1 = Button(17)
-        self.button2 = Button(27)
-        self.button3 = Button(22)
+        self.blue_button = Button(17)
+        self.green_button = Button(27)
+        self.red_button = Button(22)
+        self.servo = Servo(12)
 
     def setup_display(self):
         try:
@@ -93,15 +32,13 @@ class bzLock:
 
     def clear_display(self):
         if self.display:
-            with canvas(self.display) as draw:
-                draw.rectangle(self.display.bounding_box, fill="black")
+            self.display.clear()
         else:
             print("Display has not been set up")
 
     def text_to_display(self, text, xy=(0, 0), font=None):
         if self.display:
             with canvas(self.display) as draw:
-                self.clear_display()
                 draw.text(xy, text, fill="white", font=font)
         else:
             print("Display has not been set up")
@@ -117,18 +54,20 @@ class bzLock:
 
     def read_numpad(self):
         if self.numpad:
-            while True:
-                keys = self.numpad.pressed_keys
-                if keys:
-                    time.sleep(0.3)
-                    return keys[0]
+            keys = self.numpad.pressed_keys
+            if keys:
+                time.sleep(0.5)  # Debounce
+                return keys[0]
+            else:
+                return None
         else:
             print("Numpad has not been set up")
 
-    def position_servo(self, angle):
-        pwm_pin = 12
-        inc = int(angle * 100000 / 180)
-        pigpio.pi().hardware_PWM(pwm_pin, 50, 50000 + inc)
+    def lock(self):
+        self.servo.min()
+
+    def unlock(self):
+        self.servo.max()
 
     def setup_spi(self):
         self.spi = spidev.SpiDev()
@@ -137,7 +76,7 @@ class bzLock:
         self.spi.max_speed_hz = 1200000
 
     def detect_phone(self):
-        readBytes = self.spi.xfer2([ADC_Start, ADC_CH0, 0x00])
+        readBytes = self.spi.xfer2([0b00000001, 0b10000000, 0x00])
         digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
         print(format(readBytes[2], '#010b'), format(
             readBytes[1], '#010b'), format(readBytes[0], '#010b'))
