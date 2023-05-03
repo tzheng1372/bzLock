@@ -8,20 +8,21 @@ start_stop = "Start"
 number_of_sessions = 0
 working_time = 0
 resting_time = 0
-today_working_time = 0
-today_resting_time = 0
+#today_working_time = 0
+#today_resting_time = 0
 
 def today_total():
-    global today_resting_time
-    global today_working_time
+    today_resting_time = 0
+    today_working_time = 0
     with open('data.csv', 'r') as file:
         reader = csv.reader(file)
         for row in reader:
-            if datetime.date.today() == datetime.datetime.strptime(row[0], '%Y-%m-%d').date():
+            if str(datetime.date.today()) == row[0]:
                 if row[2] == 'working':
                     today_working_time += int(row[1])
                 elif row[2] == 'resting':
                     today_resting_time += int(row[2])
+    return today_working_time, today_resting_time
 
 def read_week_data():
     week = []
@@ -65,9 +66,39 @@ def read_month_data():
                             month_y_values[index] += int(row[1])
     return month, month_y_values
 
-def writing_csv():
+def streak():
+    streak = 0
+    with open("data.csv", 'r') as file:
+        last_line = file.readlines()[-1].strip().split(",")
+        if last_line[0] == str(datetime.date.today()):
+            streak = int(last_line[3])
+        elif last_line[0] == str(datetime.date.today() - datetime.timedelta(1)):
+            streak = int(last_line[3]) + 1
+        else: 
+            streak = 1
+    return streak
+
+def write_csv(time, type):
     with open('data.csv', 'w') as file:
         writer = csv.writer(file)
+        date = str(datetime.date.today())
+        streak = streak()
+        writer.writerow([date, time, type, streak])
+
+def award():
+    gold = False
+    silver = False
+    bronze = False
+    with open("data.csv", 'r') as file:
+        last_line = file.readlines()[-1].strip().split(",")
+        streak = int(last_line[3])
+    if streak >= 1000:
+        gold, silver, bronze  = True
+    elif streak >= 100:
+        silver, bronze = True
+    elif streak >= 10:
+        bronze = True
+    return gold, silver, bronze
 
 @app.route('/')
 def slash():
@@ -79,7 +110,10 @@ def home():
 
 @app.route('/history')
 def history():
-    return render_template('history_daily.html', daily = True, chart = False)
+    today_working_total, today_resting_total = today_total()
+    gold, silver, bronze = award()
+    return render_template('history_daily.html', daily = True, chart = False, time_working = today_working_total, 
+                           time_resting = today_resting_total, bronze = bronze, silver = silver, gold = gold)
 
 @app.route('/today')
 def today():
@@ -88,12 +122,16 @@ def today():
 @app.route('/week')
 def week():
     week, week_y_values = read_week_data()
-    return render_template('history_daily.html', daily = False, chart = True, labels = week, values = week_y_values)
+    gold, silver, bronze = award()
+    return render_template('history_daily.html', daily = False, chart = True, labels = week, values = week_y_values, 
+                           bronze = bronze, silver = silver, gold = gold)
 
 @app.route('/month')
 def month():
     month, month_y_values = read_month_data()
-    return render_template('history_daily.html', daily = False, chart = True, labels = month, values = month_y_values)
+    gold, silver, bronze = award()
+    return render_template('history_daily.html', daily = False, chart = True, labels = month, values = month_y_values, 
+                           bronze = bronze, silver = silver, gold = gold)
 
 @app.route('/setting', methods = ['POST', 'GET'])
 def setting():
@@ -108,24 +146,31 @@ def setting():
     else:
         return render_template("setting.html")
 
-@app.route('/start__stop_timer')
+@app.route('/start_stop_timer', methods = ['POST', 'GET'])
 def start_stop_timer():
     global start_stop
-    if start_stop == 'Start':
-        start_stop = 'Stop'
-        return render_template('home.html', start_stop = start_stop, hour = 0, minute = working_time, seconds = 0)
-    elif start_stop == 'Stop':
-        start_stop = 'Start'
-        return render_template('home.html', start_stop = start_stop, hour = 0, minute = working_time, seconds = 0)
+    if request.method == 'GET':
+        if start_stop == 'Start':
+            start_stop = 'Stop'
+            return redirect('/home')
+        elif start_stop == 'Stop':
+            start_stop = 'Start'
+            return redirect('/home')
+    else:
+        return redirect('/home')
 
-@app.route('/reset_timer')
+@app.route('/reset_timer', methods = ['POST', 'GET'])
 def reset_timer():
-    return redirect('/home')
+    if request.method == 'GET':
+        #reset timer
+        return
+    else:
+        return redirect('/home')
 
 @app.route('/unlock')
 def unlock():
     #unlock box
-    return redirect('/start_stop_timer')       
+    return redirect('/start_stop_timer')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True, threaded=True)

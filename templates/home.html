@@ -55,9 +55,9 @@
             <div class="col-md-12">
                 <form method="post">
                     <div class="row">
-                        <div class="col"><button class="btn btn-primary" role="button" href="/reset_timer">Reset</button></div>
-                        <div class="col"><button class="btn btn-primary" role="button" href="/start_stop_timer">{{start_stop}}</button></div>
-                        <div class="col"><button class="btn btn-primary" role="button" href="/unlock">Unlock</button></div>
+                        <div class="col"><a class="btn btn-primary" role="button" href="{{ url_for('reset_timer') }}">Reset</a></div>
+                        <div class="col"><a class="btn btn-primary" role="button" href="{{ url_for('start_stop_timer') }}">{{start_stop}}</a></div>
+                        <div class="col"><a class="btn btn-primary" role="button" href="{{ url_for('unlock') }}">Unlock</a></div>
                     </div>
                 </form>
             </div>
