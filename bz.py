@@ -64,12 +64,10 @@ class bzLock:
             print("Numpad has not been set up")
 
     def lock(self):
-        self.servo.value = 1
-        time.sleep(0.5)
+        self.servo.min()
 
     def unlock(self):
-        self.servo.value = 0
-        time.sleep(0.5)
+        self.servo.max()
 
     def setup_spi(self):
         self.spi = spidev.SpiDev()
