@@ -19,6 +19,7 @@ class bzLock:
         self.green_button = Button(27)
         self.red_button = Button(22)
         self.servo = Servo(12)
+        self.unlock()
 
     def setup_display(self):
         try:
