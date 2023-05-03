@@ -1,9 +1,8 @@
-import board
-import digitalio
+import board  # type: ignore
+import digitalio  # type: ignore
+import spidev  # type: ignore
+import adafruit_matrixkeypad  # type: ignore
 import time
-import spidev
-import adafruit_matrixkeypad
-from hx711 import HX711
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
@@ -77,11 +76,9 @@ class bzLock:
         self.spi.max_speed_hz = 1200000
 
     def detect_phone(self):
-        readBytes = self.spi.xfer2([0b00000001, 0b10000000, 0x00])
+        readBytes = self.spi.xfer2(  # type: ignore
+            [0b00000001, 0b10000000, 0x00])
         digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
-        print(format(readBytes[2], '#010b'), format(
-            readBytes[1], '#010b'), format(readBytes[0], '#010b'))
-        print(digitalValue)
         if digitalValue > 2:
             return True
         return False
