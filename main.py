@@ -134,9 +134,8 @@ bz.setup_spi()
 
 display_lock = Lock()
 
+
 # Enum for menu states
-
-
 class MenuState(Enum):
     MAIN = 1
     SET_TIMER_SUBMENU = 2
@@ -144,6 +143,7 @@ class MenuState(Enum):
     RUNNING_TIMER = 4
 
 
+# Initialize to main menu
 menu_state = MenuState.MAIN
 
 # Timer lengths
@@ -187,7 +187,7 @@ def show_numpad_input(input_value):
 
 
 # Function for getting numpad input
-def get_numpad_input(max_digits, default):
+def get_numpad_input(default: int):
     input_value = ""
     while True:
         key = bz.read_numpad()
@@ -200,7 +200,7 @@ def get_numpad_input(max_digits, default):
             print(input_value)
             show_numpad_input(input_value)
 
-            if len(input_value) >= max_digits:
+            if len(input_value) >= 4:
                 break
 
         # Break the loop if the green button is pressed
@@ -233,7 +233,7 @@ try:
 
                 if time_remaining <= 0:
                     print("Timer finished")
-                    # Add your code to unlock the box here
+                    bz.unlock()
                     menu_state = MenuState.MAIN
                 else:
                     show_timer_remaining(time_remaining)
@@ -248,13 +248,14 @@ try:
                 menu_state = MenuState.SET_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
                 show_numpad_input("")
-                focus_timer_length = get_numpad_input(4, 25) * 60
+                focus_timer_length = get_numpad_input(25) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
                 current_timer = focus_timer_length
                 timer_start_time = time.time()
                 timer_paused = False
+                bz.lock()
                 menu_state = MenuState.RUNNING_TIMER
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
@@ -271,7 +272,7 @@ try:
                 menu_state = MenuState.START_TIMER_SUBMENU
             elif menu_state == MenuState.SET_TIMER_SUBMENU:
                 show_numpad_input("")
-                rest_timer_length = get_numpad_input(4, 5) * 60
+                rest_timer_length = get_numpad_input(5) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
@@ -292,7 +293,7 @@ try:
             time.sleep(0.5)  # Debounce
             if menu_state == MenuState.RUNNING_TIMER:
                 print("Stop timer and unlock box")
-                # Add your code to unlock the box here
+                bz.unlock()
                 menu_state = MenuState.MAIN
 
 except KeyboardInterrupt:
