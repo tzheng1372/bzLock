@@ -158,6 +158,7 @@ def start_stop_timer():
             return redirect('/home')
         elif start_stop == 'Stop':
             start_stop = 'Start'
+            #stop timer
             return redirect('/home')
     else:
         return redirect('/home')
