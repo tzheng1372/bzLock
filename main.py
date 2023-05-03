@@ -266,7 +266,7 @@ try:
                     print("Pause timer")
                     timer_paused = True
 
-        if bz.green_button.is_pressed:  # type: ignore
+        elif bz.green_button.is_pressed:  # type: ignore
             time.sleep(0.5)  # Debounce
             if menu_state == MenuState.MAIN:
                 menu_state = MenuState.START_TIMER_SUBMENU
