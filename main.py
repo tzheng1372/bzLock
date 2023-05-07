@@ -75,7 +75,7 @@ def show_close_box_message():
 
 def show_stop_message():
     with display_lock:
-        text = "Timer stopped\r\nand unlocked"
+        text = "Timer stopped"
         bz.text_to_display(text)
         sleep(1.5)
 
@@ -203,7 +203,6 @@ try:
         elif bz.red_button.is_pressed:  # type: ignore
             sleep(0.5)  # Debounce
             if menu_state == MenuState.RUNNING_TIMER:
-                print("Stop timer and unlock box")
                 bz.unlock()
                 bz.red_led()
                 show_stop_message()
