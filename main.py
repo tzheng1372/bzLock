@@ -163,6 +163,7 @@ try:
                     show_close_box_message()
                     bz.off_led()
             elif menu_state == MenuState.RUNNING_TIMER:
+                print("Reset timer")
                 if timer_type == "focus":
                     bz.blue_led()
                     current_timer = focus_timer_length
