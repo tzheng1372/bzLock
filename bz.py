@@ -94,7 +94,7 @@ class bzLock:
         self.led.color = (0, 0, 1)
 
     def yellow_led(self):
-        self.led.color = (1, 1, 0)
+        self.led.color = (0.5, 1, 0)
 
     def off_led(self):
         self.led.color = (0, 0, 0)
