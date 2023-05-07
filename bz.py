@@ -79,6 +79,7 @@ class bzLock:
         readBytes = self.spi.xfer2(  # type: ignore
             [0b00000001, 0b10000000, 0x00])
         digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
-        if digitalValue > 100:
+        print(digitalValue)
+        if digitalValue > 200:
             return True
         return False
