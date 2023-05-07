@@ -70,6 +70,7 @@ def show_close_box_message():
     with display_lock:
         text = "Please close the box\r\nwith phone inside"
         bz.text_to_display(text)
+        sleep(1)
 
 
 # Function for getting numpad input
@@ -164,14 +165,10 @@ try:
                 rest_timer_length = get_numpad_input(5) * 60
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
-                # todo: add detect phone in box and box closed
-                if bz.detect_phone():
-                    current_timer = rest_timer_length
-                    timer_start_time = time()
-                    timer_paused = False
-                    menu_state = MenuState.RUNNING_TIMER
-                else:
-                    show_close_box_message()
+                current_timer = rest_timer_length
+                timer_start_time = time()
+                timer_paused = False
+                menu_state = MenuState.RUNNING_TIMER
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
