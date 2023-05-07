@@ -33,6 +33,7 @@ rest_timer_length = 5 * 60
 # Timer tracking variables
 current_timer = None
 timer_start_time = None
+timer_type = None
 timer_paused = False
 
 
@@ -91,7 +92,6 @@ def get_numpad_input(default: int):
             elif key == "0" and len(input_value) == 0:
                 continue
             input_value += key
-            print(input_value)
             show_numpad_input(input_value)
 
             if len(input_value) >= 4:
@@ -151,26 +151,26 @@ try:
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
                 if bz.detect_phone():
+                    bz.blue_led()
                     current_timer = focus_timer_length
                     timer_start_time = time()
+                    timer_type = "focus"
                     timer_paused = False
                     bz.lock()
-                    bz.blue_led()
                     menu_state = MenuState.RUNNING_TIMER
                 else:
                     bz.yellow_led()
                     show_close_box_message()
                     bz.off_led()
             elif menu_state == MenuState.RUNNING_TIMER:
-                if timer_paused:
-                    print("Resume timer")
-                    timer_start_time = time() - (current_timer - time_remaining)  # type: ignore
-                    timer_paused = False
+                if timer_type == "focus":
                     bz.blue_led()
-                else:
-                    print("Pause timer")
-                    timer_paused = True
-                    bz.yellow_led()
+                    current_timer = focus_timer_length
+                elif timer_type == "rest":
+                    bz.green_led()
+                    current_timer = rest_timer_length
+                timer_start_time = time()
+                timer_paused = False
 
         elif bz.green_button.is_pressed:  # type: ignore
             sleep(0.5)  # Debounce
@@ -184,10 +184,11 @@ try:
                 bz.off_led()
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
+                bz.green_led()
                 current_timer = rest_timer_length
                 timer_start_time = time()
+                timer_type = "rest"
                 timer_paused = False
-                bz.green_led()
                 menu_state = MenuState.RUNNING_TIMER
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
