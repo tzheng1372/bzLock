@@ -73,6 +73,13 @@ def show_close_box_message():
         sleep(1.5)
 
 
+def show_stop_message():
+    with display_lock:
+        text = "Timer stopped\r\nand unlocked"
+        bz.text_to_display(text)
+        sleep(1.5)
+
+
 # Function for getting numpad input
 def get_numpad_input(default: int):
     input_value = ""
@@ -199,7 +206,8 @@ try:
                 print("Stop timer and unlock box")
                 bz.unlock()
                 bz.red_led()
-                sleep(1)
+                show_stop_message()
+                bz.off_led()
                 menu_state = MenuState.MAIN
 
 except KeyboardInterrupt:
