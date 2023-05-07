@@ -85,16 +85,16 @@ class bzLock:
         return False
 
     def red_led(self):
-        self.led = (1, 0, 0)
+        self.led.color = (1, 0, 0)
 
     def green_led(self):
-        self.led = (0, 1, 0)
+        self.led.color = (0, 1, 0)
 
     def blue_led(self):
-        self.led = (0, 0, 1)
+        self.led.color = (0, 0, 1)
 
     def yellow_led(self):
-        self.led = (1, 1, 0)
+        self.led.color = (1, 1, 0)
 
     def off_led(self):
-        self.led = (0, 0, 0)
+        self.led.color = (0, 0, 0)
