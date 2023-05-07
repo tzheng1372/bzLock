@@ -6,7 +6,7 @@ import time
 from luma.core.interface.serial import i2c
 from luma.core.render import canvas
 from luma.oled.device import sh1106
-from gpiozero import Button, Servo
+from gpiozero import Button, Servo, RGBLED
 
 
 class bzLock:
@@ -18,6 +18,7 @@ class bzLock:
         self.green_button = Button(27)
         self.red_button = Button(22)
         self.servo = Servo(12)
+        self.led = RGBLED(red=25, green=24, blue=23)
         self.unlock()
 
     def setup_display(self):
@@ -82,3 +83,18 @@ class bzLock:
         if digitalValue > 200:
             return True
         return False
+
+    def red_led(self):
+        self.led = (1, 0, 0)
+
+    def green_led(self):
+        self.led = (0, 1, 0)
+
+    def blue_led(self):
+        self.led = (0, 0, 1)
+
+    def yellow_led(self):
+        self.led = (1, 1, 0)
+
+    def off_led(self):
+        self.led = (0, 0, 0)
