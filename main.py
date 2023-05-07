@@ -67,7 +67,7 @@ def show_close_box_message():
     with display_lock:
         text = "Please close the box\r\nwith phone inside"
         bz.text_to_display(text)
-        sleep(2)
+        sleep(1.5)
 
 
 # Function for getting numpad input
