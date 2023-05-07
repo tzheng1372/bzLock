@@ -66,6 +66,12 @@ def show_numpad_input(input_value):
         bz.text_to_display(text)
 
 
+def show_close_box_message():
+    with display_lock:
+        text = "Please close the box\r\nwith phone inside"
+        bz.text_to_display(text)
+
+
 # Function for getting numpad input
 def get_numpad_input(default: int):
     input_value = ""
@@ -132,11 +138,14 @@ try:
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
-                current_timer = focus_timer_length
-                timer_start_time = time()
-                timer_paused = False
-                bz.lock()
-                menu_state = MenuState.RUNNING_TIMER
+                if bz.detect_phone():
+                    current_timer = focus_timer_length
+                    timer_start_time = time()
+                    timer_paused = False
+                    bz.lock()
+                    menu_state = MenuState.RUNNING_TIMER
+                else:
+                    show_close_box_message()
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
@@ -156,10 +165,13 @@ try:
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
                 # todo: add detect phone in box and box closed
-                current_timer = rest_timer_length
-                timer_start_time = time()
-                timer_paused = False
-                menu_state = MenuState.RUNNING_TIMER
+                if bz.detect_phone():
+                    current_timer = rest_timer_length
+                    timer_start_time = time()
+                    timer_paused = False
+                    menu_state = MenuState.RUNNING_TIMER
+                else:
+                    show_close_box_message()
             elif menu_state == MenuState.RUNNING_TIMER:
                 if timer_paused:
                     print("Resume timer")
@@ -169,7 +181,7 @@ try:
                     print("Pause timer")
                     timer_paused = True
 
-        if bz.red_button.is_pressed:  # type: ignore
+        elif bz.red_button.is_pressed:  # type: ignore
             sleep(0.5)  # Debounce
             if menu_state == MenuState.RUNNING_TIMER:
                 print("Stop timer and unlock box")
