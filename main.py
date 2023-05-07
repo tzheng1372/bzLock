@@ -1,11 +1,7 @@
-# from queue import LifoQueue
-# from luma.core.render import canvas
-
 from threading import Lock
 from time import sleep, time
 from enum import Enum
 from bz import bzLock
-
 
 bz = bzLock()
 bz.setup_display()
