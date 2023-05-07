@@ -18,6 +18,10 @@ class bzLock:
         self.green_button = Button(27)
         self.red_button = Button(22)
         self.servo = Servo(12)
+
+        self.setup_display()
+        self.setup_numpad()
+        self.setup_spi()
         self.unlock()
 
     def setup_display(self):

@@ -8,9 +8,6 @@ from bz import bzLock
 
 
 bz = bzLock()
-bz.setup_display()
-bz.setup_numpad()
-bz.setup_spi()
 
 display_lock = Lock()
 
