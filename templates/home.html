@@ -29,21 +29,32 @@
                     <div class="container">
                         <h1>Timer</h1>
                         <div class="text-center" id="clockdiv">
-                            <div class="clock-wrapper"><span class="hours"> {{hour}}</span>
+                            <div class="clock-wrapper"><span class="days"> </span>
+                                <div class="smalltext">
+                                    <p>Days </p>
+                                </div>
+                            </div>
+                            <div class="clock-wrapper"><span class="hours"> </span>
                                 <div class="smalltext">
                                     <p>Hours </p>
                                 </div>
                             </div>
-                            <div class="clock-wrapper"><span class="minutes">{{minute}} </span>
+                            <div class="clock-wrapper"><span class="minutes"> </span>
                                 <div class="smalltext">
                                     <p>Minutes </p>
                                 </div>
                             </div>
-                            <div class="clock-wrapper"><span class="seconds"> {{seconds}}</span>
+                            <div class="clock-wrapper"><span class="seconds"> </span>
                                 <div class="smalltext">
                                     <p>Seconds </p>
                                 </div>
                             </div>
+                            {% if start %}
+                                <script>
+                                    document.getElementById('clockdiv')
+                                    var deadline = new Date(Date.parse(new Date()) + {{ milliseconds }});
+                                </script>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

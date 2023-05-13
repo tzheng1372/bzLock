@@ -8,6 +8,7 @@ start_stop = "Start"
 number_of_sessions = 0
 working_time = 0
 resting_time = 0
+start = False
 #today_working_time = 0
 #today_resting_time = 0
 
@@ -107,7 +108,9 @@ def slash():
 
 @app.route('/home')
 def home():
-    return render_template('home.html', start_stop = start_stop, hour = 0, minute = working_time, seconds = 0)
+    global start
+    milliseconds = working_time * 60 * 10000
+    return render_template('home.html', start_stop = start_stop, start = start, milliseconds = 36000)
 
 @app.route('/history')
 def history():
@@ -150,13 +153,15 @@ def setting():
 @app.route('/start_stop_timer', methods = ['POST', 'GET'])
 def start_stop_timer():
     global start_stop
+    global start
     if request.method == 'GET':
         if start_stop == 'Start':
             start_stop = 'Stop'
+            start = True
             return redirect('/home')
         elif start_stop == 'Stop':
             start_stop = 'Start'
-            #stop timer
+            start = False
             return redirect('/home')
     else:
         return redirect('/home')
