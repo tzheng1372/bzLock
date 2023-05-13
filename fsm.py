@@ -1,4 +1,4 @@
-from threading import Lock
+from threading import Thread, Lock
 from time import sleep, time
 from enum import Enum
 from bz import bzLock
@@ -104,7 +104,15 @@ def get_numpad_input(default: int):
         return default
 
 
-try:
+def fsm():
+    global menu_state
+    global focus_timer_length
+    global rest_timer_length
+    global current_timer
+    global timer_start_time
+    global timer_type
+    global timer_paused
+
     while True:
         if menu_state == MenuState.MAIN:
             show_menu()
@@ -145,7 +153,6 @@ try:
                 bz.off_led()
                 menu_state = MenuState.MAIN
             elif menu_state == MenuState.START_TIMER_SUBMENU:
-                # todo: add detect phone in box and box closed
                 if bz.detect_phone():
                     bz.blue_led()
                     current_timer = focus_timer_length
@@ -207,8 +214,10 @@ try:
                 bz.off_led()
                 menu_state = MenuState.MAIN
 
-except KeyboardInterrupt:
-    bz.clear_display()
+
+if __name__ == "__main__":
+    program_thread = Thread(target=fsm)
+    program_thread.start()
 
 
 # import datetime
