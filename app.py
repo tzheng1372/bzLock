@@ -109,7 +109,7 @@ def slash():
 @app.route('/home')
 def home():
     global start
-    milliseconds = working_time * 60 * 10000
+    milliseconds = working_time * 60 * 1000
     return render_template('home.html', start_stop = start_stop, start = start, milliseconds = milliseconds)
 
 @app.route('/history')
