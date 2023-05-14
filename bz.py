@@ -14,11 +14,11 @@ class bzLock:
         self.display = None
         self.numpad = None
         self.spi = None
-        self.blue_button = Button(17)
-        self.green_button = Button(27)
-        self.red_button = Button(22)
+        self.blue_button = Button(14)
+        self.green_button = Button(15)
+        self.red_button = Button(16)
         self.servo = Servo(4)
-        self.led = RGBLED(red=25, green=24, blue=23)
+        self.led = RGBLED(red=26, green=21, blue=20)
         self.unlock()
 
     def setup_display(self):
@@ -46,9 +46,9 @@ class bzLock:
 
     def setup_numpad(self):
         cols = [digitalio.DigitalInOut(x)
-                for x in (board.D26, board.D20, board.D21)]
+                for x in (board.D7, board.D1, board.D12)]
         rows = [digitalio.DigitalInOut(x) for x in (
-            board.D5, board.D6, board.D13, board.D19)]
+            board.D18, board.D23, board.D24, board.D25)]
         keys = (('1', '2', '3'), ('4', '5', '6'),
                 ('7', '8', '9'), ('*', '0', '#'))
         self.numpad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
