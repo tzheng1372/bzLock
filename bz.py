@@ -17,7 +17,7 @@ class bzLock:
         self.blue_button = Button(17)
         self.green_button = Button(27)
         self.red_button = Button(22)
-        self.servo = Servo(12)
+        self.servo = Servo(4)
         self.led = RGBLED(red=25, green=24, blue=23)
         self.unlock()
 
