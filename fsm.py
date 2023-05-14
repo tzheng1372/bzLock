@@ -215,9 +215,10 @@ def fsm():
                 menu_state = MenuState.MAIN
 
 
-if __name__ == "__main__":
-    program_thread = Thread(target=fsm)
-    program_thread.start()
+fsm()
+# if __name__ == "__main__":
+#     program_thread = Thread(target=fsm)
+#     program_thread.start()
 
 
 # import datetime
