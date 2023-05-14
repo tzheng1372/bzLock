@@ -81,7 +81,7 @@ class bzLock:
             [0b00000001, 0b10000000, 0x00])
         digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
         print(digitalValue)
-        if digitalValue > 200:
+        if digitalValue > 2:
             return True
         return False
 
