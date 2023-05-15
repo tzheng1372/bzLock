@@ -1,2 +1,2 @@
 # bzLock
-make some changes to this file to test git commit
+This is the senior design project for Jason Pei and Thomas Zheng.
