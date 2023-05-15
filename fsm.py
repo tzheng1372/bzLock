@@ -80,13 +80,12 @@ def hardware_interface_process(shared_state, bz):
         shared_state['blue_button_pressed'] = bz.blue_button.is_pressed
         shared_state['green_button_pressed'] = bz.green_button.is_pressed
         shared_state['red_button_pressed'] = bz.red_button.is_pressed
-        sleep(0.1)  # Short sleep to avoid busy waiting
+        sleep(0.5)  # Short sleep to avoid busy waiting
 
 
 def button_process(shared_state, bz, display_lock):
     while True:
         if shared_state['blue_button_pressed']:
-            sleep(0.5)  # Debounce
             if shared_state["menu_state"] == MenuState.MAIN:
                 bz.off_led()
                 shared_state["menu_state"] = MenuState.SET_TIMER_SUBMENU
@@ -124,7 +123,6 @@ def button_process(shared_state, bz, display_lock):
                 shared_state["timer_paused"] = False
 
         elif shared_state['green_button_pressed']:
-            sleep(0.5)  # Debounce
             if shared_state["menu_state"] == MenuState.MAIN:
                 bz.off_led()
                 shared_state["menu_state"] = MenuState.START_TIMER_SUBMENU
@@ -156,7 +154,6 @@ def button_process(shared_state, bz, display_lock):
                 bz.yellow_led()
 
         elif shared_state['red_button_pressed']:
-            sleep(0.5)  # Debounce
             if shared_state["menu_state"] == MenuState.RUNNING_TIMER:
                 bz.unlock()
                 bz.red_led()
