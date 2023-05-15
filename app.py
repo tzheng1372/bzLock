@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request
 import csv
 import datetime
+#import bz
 
 app = Flask(__name__, static_folder='assets')
 
@@ -9,6 +10,7 @@ number_of_sessions = 0
 working_time = 0
 resting_time = 0
 start = False
+state = 'none'
 #today_working_time = 0
 #today_resting_time = 0
 
@@ -67,7 +69,7 @@ def read_month_data():
                             month_y_values[index] += int(row[1])
     return month, month_y_values
 
-def streak():
+def compute_streak():
     streak = 0
     with open("data.csv", 'r') as file:
         last_line = file.readlines()[-1].strip().split(",")
@@ -83,7 +85,7 @@ def write_csv(time, type):
     with open('data.csv', 'w') as file:
         writer = csv.writer(file)
         date = str(datetime.date.today())
-        streak = streak()
+        streak = compute_streak()
         writer.writerow([date, time, type, streak])
 
 def award():
@@ -109,7 +111,14 @@ def slash():
 @app.route('/home')
 def home():
     global start
-    milliseconds = working_time * 60 * 1000
+    global working_time
+    global resting_time
+    global state
+    global number_of_sessions
+    milliseconds = 0
+    milliseconds = int(working_time) * 60 * 1000
+    if start == True:
+        write_csv(working_time, 'working')
     return render_template('home.html', start_stop = start_stop, start = start, milliseconds = milliseconds)
 
 @app.route('/history')
@@ -143,9 +152,9 @@ def setting():
     global working_time
     global resting_time
     if request.method == 'POST':
-        number_of_sessions = request.form['number_of_sessions']
-        working_time = request.form['working_time']
-        resting_time = request.form['resting_time']
+        number_of_sessions = int(request.form['number_of_sessions'])
+        working_time = int(request.form['working_time'])
+        resting_time = int(request.form['resting_time'])
         return redirect('/home')
     else:
         return render_template("setting.html")
@@ -169,14 +178,13 @@ def start_stop_timer():
 @app.route('/reset_timer', methods = ['POST', 'GET'])
 def reset_timer():
     if request.method == 'GET':
-        #reset timer
-        return
+        return redirect('/home')
     else:
         return redirect('/home')
 
 @app.route('/unlock')
 def unlock():
-    #unlock box
+    #bz.unlock()
     return redirect('/start_stop_timer')
 
 if __name__ == '__main__':
