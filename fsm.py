@@ -1,7 +1,33 @@
-from multiprocessing import Process, Manager, Lock
 from time import sleep, time
 from enum import Enum
 from bz import bzLock
+
+bz = bzLock()
+bz.setup_display()
+bz.setup_numpad()
+bz.setup_spi()
+
+
+# Enum for menu states
+class MenuState(Enum):
+    MAIN = 1
+    SET_TIMER_SUBMENU = 2
+    START_TIMER_SUBMENU = 3
+    RUNNING_TIMER = 4
+
+
+# Initialize to main menu
+menu_state = MenuState.MAIN
+
+# Timer lengths
+focus_timer_length = 25 * 60
+rest_timer_length = 5 * 60
+
+# Timer tracking variables
+current_timer = None
+timer_start_time = None
+timer_type = None
+timer_paused = False
 
 
 def show_menu():
@@ -68,170 +94,159 @@ def get_numpad_input(default: int):
         return default
 
 
-class MenuState(Enum):
-    MAIN = 1
-    SET_TIMER_SUBMENU = 2
-    START_TIMER_SUBMENU = 3
-    RUNNING_TIMER = 4
+def fsm():
+    global menu_state
+    global focus_timer_length
+    global rest_timer_length
+    global current_timer
+    global timer_start_time
+    global timer_type
+    global timer_paused
 
-
-def hardware_interface_process(shared_state, bz):
     while True:
-        shared_state['blue_button_pressed'] = bz.blue_button.is_pressed()
-        shared_state['green_button_pressed'] = bz.green_button.is_pressed()
-        shared_state['red_button_pressed'] = bz.red_button.is_pressed()
-        sleep(0.5)  # Short sleep to avoid busy waiting
+        if menu_state == MenuState.MAIN:
+            show_menu()
+            current_timer = None
 
+        elif menu_state == MenuState.SET_TIMER_SUBMENU:
+            show_set_timer_submenu()
 
-def button_process(shared_state, bz, display_lock):
-    while True:
-        if shared_state['blue_button_pressed']:
-            if shared_state["menu_state"] == MenuState.MAIN:
-                bz.off_led()
-                shared_state["menu_state"] = MenuState.SET_TIMER_SUBMENU
-            elif shared_state["menu_state"] == MenuState.SET_TIMER_SUBMENU:
-                bz.yellow_led()
-                with display_lock:
-                    show_numpad_input("")
-                    shared_state["focus_timer_length"] = get_numpad_input(
-                        25) * 60
-                bz.off_led()
-                shared_state["menu_state"] = MenuState.MAIN
-            elif shared_state["menu_state"] == MenuState.START_TIMER_SUBMENU:
-                if bz.detect_phone():
-                    bz.blue_led()
-                    shared_state["current_timer"] = shared_state["focus_timer_length"]
-                    shared_state["timer_start_time"] = time()
-                    shared_state["timer_type"] = "focus"
-                    shared_state["timer_paused"] = False
-                    bz.lock()
-                    shared_state["menu_state"] = MenuState.RUNNING_TIMER
-                else:
-                    bz.yellow_led()
-                    with display_lock:
-                        show_close_box_message()
-                    bz.off_led()
-            elif shared_state["menu_state"] == MenuState.RUNNING_TIMER:
-                print("Reset timer")
-                if shared_state["timer_type"] == "focus":
-                    bz.blue_led()
-                    shared_state["current_timer"] = shared_state["focus_timer_length"]
-                elif shared_state["timer_type"] == "rest":
-                    bz.green_led()
-                    shared_state["current_timer"] = shared_state["rest_timer_length"]
-                shared_state["timer_start_time"] = time()
-                shared_state["timer_paused"] = False
+        elif menu_state == MenuState.START_TIMER_SUBMENU:
+            show_start_timer_submenu()
 
-        elif shared_state['green_button_pressed']:
-            if shared_state["menu_state"] == MenuState.MAIN:
-                bz.off_led()
-                shared_state["menu_state"] = MenuState.START_TIMER_SUBMENU
-            elif shared_state["menu_state"] == MenuState.SET_TIMER_SUBMENU:
-                bz.yellow_led()
-                with display_lock:
-                    show_numpad_input("")
-                    shared_state["rest_timer_length"] = get_numpad_input(
-                        5) * 60
-                bz.off_led()
-                shared_state["menu_state"] = MenuState.MAIN
-            elif shared_state["menu_state"] == MenuState.START_TIMER_SUBMENU:
-                bz.green_led()
-                shared_state["current_timer"] = shared_state["rest_timer_length"]
-                shared_state["timer_start_time"] = time()
-                shared_state["timer_type"] = "rest"
-                shared_state["timer_paused"] = False
-                shared_state["menu_state"] = MenuState.RUNNING_TIMER
-        elif shared_state["menu_state"] == MenuState.RUNNING_TIMER:
-            if shared_state["timer_paused"]:
-                print("Resume timer")
-                shared_state["timer_start_time"] = time(
-                ) - (shared_state["current_timer"] - shared_state["time_remaining"])
-                shared_state["timer_paused"] = False
-                bz.blue_led()
-            else:
-                print("Pause timer")
-                shared_state["timer_paused"] = True
-                bz.yellow_led()
-
-        elif shared_state['red_button_pressed']:
-            if shared_state["menu_state"] == MenuState.RUNNING_TIMER:
-                bz.unlock()
-                bz.red_led()
-                with display_lock:
-                    show_stop_message()
-                bz.off_led()
-                shared_state["menu_state"] = MenuState.MAIN
-
-        sleep(0.1)
-
-
-def timer_process(shared_state, bz, display_lock):
-    while True:
-        if shared_state["menu_state"] == MenuState.MAIN:
-            with display_lock:
-                show_menu()
-            shared_state["current_timer"] = None
-
-        elif shared_state["menu_state"] == MenuState.SET_TIMER_SUBMENU:
-            with display_lock:
-                show_set_timer_submenu()
-
-        elif shared_state["menu_state"] == MenuState.START_TIMER_SUBMENU:
-            with display_lock:
-                show_start_timer_submenu()
-
-        elif shared_state["menu_state"] == MenuState.RUNNING_TIMER:
-            if shared_state["current_timer"] is not None and not shared_state["timer_paused"]:
-                time_elapsed = time() - shared_state["timer_start_time"]
-                time_remaining = int(
-                    shared_state["current_timer"] - time_elapsed)
+        elif menu_state == MenuState.RUNNING_TIMER:
+            if current_timer is not None and not timer_paused:
+                time_elapsed = time() - timer_start_time  # type: ignore
+                time_remaining = int(current_timer - time_elapsed)
 
                 if time_remaining <= 0:
                     print("Timer finished")
                     bz.unlock()
                     bz.off_led()
-                    shared_state["menu_state"] = MenuState.MAIN
+                    menu_state = MenuState.MAIN
                 else:
-                    shared_state["time_remaining"] = time_remaining
-                    with display_lock:
-                        show_timer_remaining(time_remaining)
+                    show_timer_remaining(time_remaining)
+            else:
+                sleep(0.1)
 
         sleep(0.1)
 
+        if bz.blue_button.is_pressed:  # type: ignore
+            sleep(0.5)  # Debounce
+            if menu_state == MenuState.MAIN:
+                bz.off_led()
+                menu_state = MenuState.SET_TIMER_SUBMENU
+            elif menu_state == MenuState.SET_TIMER_SUBMENU:
+                bz.yellow_led()
+                show_numpad_input("")
+                focus_timer_length = get_numpad_input(25) * 60
+                bz.off_led()
+                menu_state = MenuState.MAIN
+            elif menu_state == MenuState.START_TIMER_SUBMENU:
+                if bz.detect_phone():
+                    bz.blue_led()
+                    current_timer = focus_timer_length
+                    timer_start_time = time()
+                    timer_type = "focus"
+                    timer_paused = False
+                    bz.lock()
+                    menu_state = MenuState.RUNNING_TIMER
+                else:
+                    bz.yellow_led()
+                    show_close_box_message()
+                    bz.off_led()
+            elif menu_state == MenuState.RUNNING_TIMER:
+                print("Reset timer")
+                if timer_type == "focus":
+                    bz.blue_led()
+                    current_timer = focus_timer_length
+                elif timer_type == "rest":
+                    bz.green_led()
+                    current_timer = rest_timer_length
+                timer_start_time = time()
+                timer_paused = False
 
-if __name__ == "__main__":
-    bz = bzLock()
-    bz.setup_display()
-    bz.setup_numpad()
-    bz.setup_spi()
+        elif bz.green_button.is_pressed:  # type: ignore
+            sleep(0.5)  # Debounce
+            if menu_state == MenuState.MAIN:
+                bz.off_led()
+                menu_state = MenuState.START_TIMER_SUBMENU
+            elif menu_state == MenuState.SET_TIMER_SUBMENU:
+                bz.yellow_led()
+                show_numpad_input("")
+                rest_timer_length = get_numpad_input(5) * 60
+                bz.off_led()
+                menu_state = MenuState.MAIN
+            elif menu_state == MenuState.START_TIMER_SUBMENU:
+                bz.green_led()
+                current_timer = rest_timer_length
+                timer_start_time = time()
+                timer_type = "rest"
+                timer_paused = False
+                menu_state = MenuState.RUNNING_TIMER
+            elif menu_state == MenuState.RUNNING_TIMER:
+                if timer_paused:
+                    print("Resume timer")
+                    timer_start_time = time() - (current_timer - time_remaining)  # type: ignore
+                    timer_paused = False
+                    bz.blue_led()
+                else:
+                    print("Pause timer")
+                    timer_paused = True
+                    bz.yellow_led()
 
-    with Manager() as manager:
-        shared_state = manager.dict()
-        shared_state["menu_state"] = MenuState.MAIN
-        shared_state["focus_timer_length"] = 25 * 60
-        shared_state["rest_timer_length"] = 5 * 60
-        shared_state["current_timer"] = None
-        shared_state["timer_start_time"] = None
-        shared_state["timer_type"] = None
-        shared_state["timer_paused"] = False
-        shared_state["time_remaining"] = 0
-        shared_state["blue_button_pressed"] = False
-        shared_state["green_button_pressed"] = False
-        shared_state["red_button_pressed"] = False
+        elif bz.red_button.is_pressed:  # type: ignore
+            sleep(0.5)  # Debounce
+            if menu_state == MenuState.RUNNING_TIMER:
+                bz.unlock()
+                bz.red_led()
+                show_stop_message()
+                bz.off_led()
+                menu_state = MenuState.MAIN
 
-        display_lock = Lock()
 
-        p1 = Process(target=hardware_interface_process,
-                     args=(shared_state, bz))
-        p2 = Process(target=button_process, args=(
-            shared_state, bz, display_lock))
-        p3 = Process(target=timer_process, args=(
-            shared_state, bz, display_lock))
+fsm()
+# if __name__ == "__main__":
+#     program_thread = Thread(target=fsm)
+#     program_thread.start()
 
-        p1.start()
-        p2.start()
-        p3.start()
 
-        p1.join()
-        p2.join()
-        p3.join()
+# import datetime
+# import math
+
+# def posn(angle, arm_length):
+#     dx = int(math.cos(math.radians(angle)) * arm_length)
+#     dy = int(math.sin(math.radians(angle)) * arm_length)
+#     return (dx, dy)
+
+
+# def draw_clock(draw):
+#     now = datetime.datetime.now()
+#     today_date = now.strftime("%b/%d/%y")
+#     today_time = now.strftime("%H:%M:%S")
+#     margin = 4
+
+#     cx = 30
+#     cy = 32
+
+#     left = cx - cy
+#     right = cx + cy
+
+#     hrs_angle = 270 + (30 * (now.hour + (now.minute / 60.0)))
+#     hrs = posn(hrs_angle, cy - margin - 7)
+
+#     min_angle = 270 + (6 * now.minute)
+#     mins = posn(min_angle, cy - margin - 2)
+
+#     sec_angle = 270 + (6 * now.second)
+#     secs = posn(sec_angle, cy - margin - 2)
+
+#     draw.ellipse((left + margin, margin, right -
+#                  margin, 64 - margin), outline="white")
+#     draw.line((cx, cy, cx + hrs[0], cy + hrs[1]), fill="white")
+#     draw.line((cx, cy, cx + mins[0], cy + mins[1]), fill="white")
+#     draw.line((cx, cy, cx + secs[0], cy + secs[1]), fill="red")
+#     draw.ellipse((cx - 2, cy - 2, cx + 2, cy + 2),
+#                  fill="white", outline="white")
+#     draw.text((2 * (cx + margin), cy - 8), today_date, fill="yellow")
+#     draw.text((2 * (cx + margin), cy), today_time, fill="yellow")
