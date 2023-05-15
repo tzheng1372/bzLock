@@ -189,10 +189,8 @@ def timer_process(shared_state, bz, display_lock):
                     shared_state["time_remaining"] = time_remaining
                     with display_lock:
                         show_timer_remaining(time_remaining)
-            else:
-                sleep(0.1)
 
-        sleep(0.1)
+        sleep(0.3)
 
 
 if __name__ == "__main__":
