@@ -75,9 +75,17 @@ class MenuState(Enum):
     RUNNING_TIMER = 4
 
 
+def hardware_interface_process(shared_state, bz):
+    while True:
+        shared_state['blue_button_pressed'] = bz.blue_button.is_pressed
+        shared_state['green_button_pressed'] = bz.green_button.is_pressed
+        shared_state['red_button_pressed'] = bz.red_button.is_pressed
+        sleep(0.1)  # Short sleep to avoid busy waiting
+
+
 def button_process(shared_state, bz, display_lock):
     while True:
-        if bz.blue_button.is_pressed:
+        if shared_state['blue_button_pressed']:
             sleep(0.5)  # Debounce
             if shared_state["menu_state"] == MenuState.MAIN:
                 bz.off_led()
@@ -115,7 +123,7 @@ def button_process(shared_state, bz, display_lock):
                 shared_state["timer_start_time"] = time()
                 shared_state["timer_paused"] = False
 
-        elif bz.green_button.is_pressed:
+        elif shared_state['green_button_pressed']:
             sleep(0.5)  # Debounce
             if shared_state["menu_state"] == MenuState.MAIN:
                 bz.off_led()
@@ -147,7 +155,7 @@ def button_process(shared_state, bz, display_lock):
                 shared_state["timer_paused"] = True
                 bz.yellow_led()
 
-        elif bz.red_button.is_pressed:
+        elif shared_state['red_button_pressed']:
             sleep(0.5)  # Debounce
             if shared_state["menu_state"] == MenuState.RUNNING_TIMER:
                 bz.unlock()
@@ -156,6 +164,7 @@ def button_process(shared_state, bz, display_lock):
                     show_stop_message()
                 bz.off_led()
                 shared_state["menu_state"] = MenuState.MAIN
+
         sleep(0.1)
 
 
@@ -190,7 +199,7 @@ def timer_process(shared_state, bz, display_lock):
                     with display_lock:
                         show_timer_remaining(time_remaining)
 
-        sleep(0.3)
+        sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -209,16 +218,23 @@ if __name__ == "__main__":
         shared_state["timer_type"] = None
         shared_state["timer_paused"] = False
         shared_state["time_remaining"] = 0
+        shared_state["blue_button_pressed"] = False
+        shared_state["green_button_pressed"] = False
+        shared_state["red_button_pressed"] = False
 
         display_lock = Lock()
 
-        p1 = Process(target=button_process, args=(
+        p1 = Process(target=hardware_interface_process,
+                     args=(shared_state, bz))
+        p2 = Process(target=button_process, args=(
             shared_state, bz, display_lock))
-        p2 = Process(target=timer_process, args=(
+        p3 = Process(target=timer_process, args=(
             shared_state, bz, display_lock))
 
         p1.start()
         p2.start()
+        p3.start()
 
         p1.join()
         p2.join()
+        p3.join()
