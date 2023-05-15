@@ -77,9 +77,9 @@ class MenuState(Enum):
 
 def hardware_interface_process(shared_state, bz):
     while True:
-        shared_state['blue_button_pressed'] = bz.blue_button.is_pressed
-        shared_state['green_button_pressed'] = bz.green_button.is_pressed
-        shared_state['red_button_pressed'] = bz.red_button.is_pressed
+        shared_state['blue_button_pressed'] = bz.blue_button.is_pressed()
+        shared_state['green_button_pressed'] = bz.green_button.is_pressed()
+        shared_state['red_button_pressed'] = bz.red_button.is_pressed()
         sleep(0.5)  # Short sleep to avoid busy waiting
 
 
