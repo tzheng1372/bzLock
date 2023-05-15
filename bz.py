@@ -57,7 +57,7 @@ class bzLock:
         if self.numpad:
             keys = self.numpad.pressed_keys
             if keys:
-                time.sleep(0.2)  # Debounce
+                time.sleep(0.5)  # Debounce
                 return keys[0]
             else:
                 return None
@@ -80,7 +80,6 @@ class bzLock:
         readBytes = self.spi.xfer2(  # type: ignore
             [0b00000001, 0b10000000, 0x00])
         digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
-        print(digitalValue)
         if digitalValue > 20:
             return True
         return False
