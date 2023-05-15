@@ -98,7 +98,6 @@ def get_numpad_input(default: int):
             sleep(0.5)  # Debounce
             break
 
-        sleep(0.1)
     try:
         return int(input_value)
     except:
@@ -129,10 +128,6 @@ try:
                     menu_state = MenuState.MAIN
                 else:
                     show_timer_remaining(time_remaining)
-            else:
-                sleep(0.1)
-
-        sleep(0.1)
 
         if bz.blue_button.is_pressed:  # type: ignore
             sleep(0.5)  # Debounce
