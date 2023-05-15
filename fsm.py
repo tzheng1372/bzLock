@@ -85,6 +85,7 @@ def get_numpad_input(default: int):
 
         # Break the loop if the green button is pressed
         if bz.green_button.is_pressed:  # type: ignore
+            sleep(0.2)  # Debounce
             break
 
         sleep(0.1)
@@ -123,7 +124,7 @@ while True:
     sleep(0.1)
 
     if bz.blue_button.is_pressed:  # type: ignore
-        sleep(0.5)  # Debounce
+        sleep(0.2)  # Debounce
         if menu_state == MenuState.MAIN:
             bz.off_led()
             menu_state = MenuState.SET_TIMER_SUBMENU
@@ -158,7 +159,7 @@ while True:
             timer_paused = False
 
     elif bz.green_button.is_pressed:  # type: ignore
-        sleep(0.5)  # Debounce
+        sleep(0.2)  # Debounce
         if menu_state == MenuState.MAIN:
             bz.off_led()
             menu_state = MenuState.START_TIMER_SUBMENU
@@ -187,7 +188,7 @@ while True:
                 bz.yellow_led()
 
     elif bz.red_button.is_pressed:  # type: ignore
-        sleep(0.5)  # Debounce
+        sleep(0.2)  # Debounce
         if menu_state == MenuState.RUNNING_TIMER:
             bz.unlock()
             bz.red_led()

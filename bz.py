@@ -57,7 +57,7 @@ class bzLock:
         if self.numpad:
             keys = self.numpad.pressed_keys
             if keys:
-                time.sleep(0.5)  # Debounce
+                time.sleep(0.2)  # Debounce
                 return keys[0]
             else:
                 return None
@@ -81,21 +81,21 @@ class bzLock:
             [0b00000001, 0b10000000, 0x00])
         digitalValue = (((readBytes[1] & 0b11) << 8) | readBytes[2])
         print(digitalValue)
-        if digitalValue > 2:
+        if digitalValue > 20:
             return True
         return False
 
     def red_led(self):
-        self.led.color = (1, 0, 0)
+        self.led.color = (0.5, 0, 0)
 
     def green_led(self):
-        self.led.color = (0, 1, 0)
+        self.led.color = (0, 0.5, 0)
 
     def blue_led(self):
-        self.led.color = (0, 0, 1)
+        self.led.color = (0, 0, 0.5)
 
     def yellow_led(self):
-        self.led.color = (0.5, 1, 0)
+        self.led.color = (0.25, 0.5, 0)
 
     def off_led(self):
         self.led.color = (0, 0, 0)
