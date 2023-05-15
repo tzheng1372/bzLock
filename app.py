@@ -82,10 +82,10 @@ def compute_streak():
     return streak
 
 def write_csv(time, type):
-    with open('data.csv', 'w') as file:
+    streak = compute_streak()
+    with open('data.csv', 'a', newline = '') as file:
         writer = csv.writer(file)
         date = str(datetime.date.today())
-        streak = compute_streak()
         writer.writerow([date, time, type, streak])
 
 def award():
